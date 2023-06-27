@@ -1,0 +1,18 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>icons/back.svg</file>
+        <file>icons/settings.svg</file>
+        <file>icons/open.svg</file>
+        <file>icons/open.png</file>
+        <file>icons/create.png</file>
+        <file>icons/layers.svg</file>
+        <file>icons/DataDisplay.svg</file>
+        <file>icons/GamePad.svg</file>
+        <file>icons/A.svg</file>
+        <file>icons/D.svg</file>
+        <file>icons/E.svg</file>
+        <file>icons/Q.svg</file>
+        <file>icons/S.svg</file>
+        <file>icons/W.svg</file>
+    </qresource>
+</RCC>
