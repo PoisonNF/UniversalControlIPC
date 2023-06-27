@@ -1,9 +1,14 @@
 #include "MotionControlWidget.h"
 
-double LeftX;
-double LastLeftX;
-double LeftY;
-double LastLeftY;
+typedef struct
+{
+    double LeftX;
+    double LastLeftX;
+    double LeftY;
+    double LastLeftY;
+}Axis;
+
+Axis axis;
 
 MotionControlWidget::MotionControlWidget(int radius, QWidget *parent) :
     QWidget(parent)
@@ -33,24 +38,24 @@ MotionControlWidget::MotionControlWidget(int radius, QWidget *parent) :
     //定时器，用于监听手柄数据
     QTimer *timer = new QTimer(this);
     connect(timer, &QTimer::timeout,this,[](){
-        if(LeftX != 0)
+        if(axis.LeftX != 0)
         {
             //如果上次也是500，不发送
-            if(LastLeftX != 500)
+            if(axis.LastLeftX != 500)
             {
-                qDebug() << "X" << LeftX;
+                qDebug() << "X" << axis.LeftX;
             }
-            LastLeftX = LeftX;  //寄存数据
+            axis.LastLeftX = axis.LeftX;  //寄存数据
         }
 
-        if(LeftY != 0)
+        if(axis.LeftY != 0)
         {
             //如果上次也是500，不发送
-            if(LastLeftY != 500)
+            if(axis.LastLeftY != 500)
             {
-                qDebug() << "Y" << LeftY;
+                qDebug() << "Y" << axis.LeftY;
             }
-            LastLeftY = LeftY;  //寄存数据
+            axis.LastLeftY = axis.LeftY;  //寄存数据
         }
     });
 
@@ -843,13 +848,13 @@ void MotionControlWidget::joysitck_axis(int js_index, int axis_index, qreal valu
         if (axis_index == 0){
             // axis range [-1, 1] -> range [0, 1000];
             //qDebug() << "x" << value*500+500;
-            LeftX = value*500+500;
+            axis.LeftX = value*500+500;
         }
         //上下
         else if (axis_index == 1){
             // axis range [-1, 1] -> range [0, 1000];
             //qDebug() << "y" << value*500+500;
-            LeftY = value*500+500;
+            axis.LeftY = value*500+500;
         }
     }
 }
