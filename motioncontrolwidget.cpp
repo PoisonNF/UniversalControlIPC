@@ -1,14 +1,9 @@
 #include "MotionControlWidget.h"
 
-typedef struct
-{
-    double LeftX;
-    double LastLeftX;
-    double LeftY;
-    double LastLeftY;
-}Axis;
+int axisXChange = 0;
+int axisYChange = 0;
 
-Axis axis;
+MotionControlWidget::Axis axis;
 
 MotionControlWidget::MotionControlWidget(int radius, QWidget *parent) :
     QWidget(parent)
@@ -37,14 +32,17 @@ MotionControlWidget::MotionControlWidget(int radius, QWidget *parent) :
 
     //定时器，用于监听手柄数据
     QTimer *timer = new QTimer(this);
-    connect(timer, &QTimer::timeout,this,[](){
+    connect(timer, &QTimer::timeout,this,[=](){
         if(axis.LeftX != 0)
         {
             //如果上次也是500，不发送
             if(axis.LastLeftX != 500)
             {
                 qDebug() << "X" << axis.LeftX;
+                axisXChange = 1;
             }
+            else
+                axisXChange = 0;
             axis.LastLeftX = axis.LeftX;  //寄存数据
         }
 
@@ -54,8 +52,16 @@ MotionControlWidget::MotionControlWidget(int radius, QWidget *parent) :
             if(axis.LastLeftY != 500)
             {
                 qDebug() << "Y" << axis.LeftY;
+                axisYChange = 1;
             }
+            else
+                axisYChange = 0;
             axis.LastLeftY = axis.LeftY;  //寄存数据
+        }
+
+        if(axisXChange == 1 || axisYChange == 1)
+        {
+            emit axisChange(axis);
         }
     });
 
@@ -101,8 +107,8 @@ void MotionControlWidget::JoysticksInit()
     connect(m_joystick, SIGNAL(buttonChanged(int, int, bool)), this, SLOT(joysitck_button(int, int, bool)));
     //connect(m_joystick, &QJoysticks::buttonEvent, this, &MainWindow::event_button);
 
-    m_joystick->setVirtualJoystickEnabled (true);    //启用虚拟手柄
-    m_joystick->setVirtualJoystickRange (1);    //设置虚拟手柄摇杆范围[-1,1]
+    //m_joystick->setVirtualJoystickEnabled (true);    //启用虚拟手柄
+    //m_joystick->setVirtualJoystickRange (1);    //设置虚拟手柄摇杆范围[-1,1]
     QStringList js_names = m_joystick->deviceNames();    //添加手柄
     qDebug() << js_names;
 }
@@ -136,10 +142,10 @@ void MotionControlWidget::Init(){
     splitter_4->setSizePolicy(sizepolicy);
 
 //PID参数设置与发送
-    QFont titleFont = QFont("Corbel", 20);
+    QFont TitleFont = QFont("Corbel", 20);
     PIDTitle = new QLabel(this);
     PIDTitle->setText("PID");
-    PIDTitle->setFont(titleFont);
+    PIDTitle->setFont(TitleFont);
     PIDTitle->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     PIDTitle->setStyleSheet("color:#2c2c2c");
 
@@ -149,12 +155,13 @@ void MotionControlWidget::Init(){
     PIDSplitter->setStyleSheet("background-color:#3c3c3c;border-radius:3px;");
 
     //设置字体和大小
-    QFont PIDDataFont = QFont("Corbel", 15);
+    QFont PIDTitleFont = QFont("Corbel", 18);
+    QFont PIDDataFont = QFont("Arial",15);
 
     //当前PID值标签
     QLabel *CurrentPID = new QLabel("Current PID",this);
     CurrentPID->setMinimumHeight(20);
-    CurrentPID->setFont(PIDDataFont);
+    CurrentPID->setFont(PIDTitleFont);
 
     CurrPID_P->setMinimumHeight(20);
     CurrPID_P->setFont(PIDDataFont);
@@ -166,7 +173,7 @@ void MotionControlWidget::Init(){
     //设置PID值标签
     QLabel *SetPID = new QLabel("Set PID",this);
     SetPID->setMinimumHeight(20);
-    SetPID->setFont(PIDDataFont);
+    SetPID->setFont(PIDTitleFont);
     //PID值的输入框
     PID_P_TII = new textInputItem("Set P:",this);
     PID_I_TII = new textInputItem("Set I:",this);
@@ -200,9 +207,9 @@ void MotionControlWidget::Init(){
         emit SetPIDSignal();    //发射信号
 
         //保存PID值为现PID值
-        CurrPID_P->setText(QString("P:     %1").arg(PID_P_TII->value()));
-        CurrPID_I->setText(QString("I:     %1").arg(PID_I_TII->value()));
-        CurrPID_D->setText(QString("D:     %1").arg(PID_D_TII->value()));
+        CurrPID_P->setText(QString("P:              %1").arg(PID_P_TII->value()));
+        CurrPID_I->setText(QString("I:              %1").arg(PID_I_TII->value()));
+        CurrPID_D->setText(QString("D:              %1").arg(PID_D_TII->value()));
     });
 
     QWidget *PIDDataWidget = new QWidget(this);
@@ -239,7 +246,7 @@ void MotionControlWidget::Init(){
 //按键显示和读取，或者使用鼠标点击，发送动作命令
     ControlTitle = new QLabel(this);
     ControlTitle->setText("Control");
-    ControlTitle->setFont(titleFont);
+    ControlTitle->setFont(TitleFont);
     ControlTitle->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     ControlTitle->setStyleSheet("color:#2c2c2c");
 
@@ -360,7 +367,7 @@ void MotionControlWidget::Init(){
 //动力系统
     QLabel *PropulsionSysLabel = new QLabel(this);
     PropulsionSysLabel->setText("Propulsion System");
-    PropulsionSysLabel->setFont(titleFont);
+    PropulsionSysLabel->setFont(TitleFont);
     PropulsionSysLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     PropulsionSysLabel->setStyleSheet("color:#2c2c2c");
 
@@ -376,16 +383,17 @@ void MotionControlWidget::Init(){
     QLabel *Thruster4 = new QLabel("Thruster4",this);
 
     //设置字体和大小
-    QFont ThrusterDataFont = QFont("Corbel", 15);
+    QFont ThrusterTitleFont = QFont("Corbel", 18);
+    QFont ThrusterDataFont = QFont("Arial",15);
 
     Thruster1->setMinimumHeight(25);
-    Thruster1->setFont(ThrusterDataFont);
+    Thruster1->setFont(ThrusterTitleFont);
     Thruster2->setMinimumHeight(25);
-    Thruster2->setFont(ThrusterDataFont);
+    Thruster2->setFont(ThrusterTitleFont);
     Thruster3->setMinimumHeight(25);
-    Thruster3->setFont(ThrusterDataFont);
+    Thruster3->setFont(ThrusterTitleFont);
     Thruster4->setMinimumHeight(25);
-    Thruster4->setFont(ThrusterDataFont);
+    Thruster4->setFont(ThrusterTitleFont);
 
     ThrusterData1->setMinimumSize(100,20);
     ThrusterData1->setFont(ThrusterDataFont);
@@ -477,7 +485,7 @@ void MotionControlWidget::Init(){
     //log标签设置
     QLabel *logLabel = new QLabel(this);
     logLabel->setText("Log From Uart");
-    logLabel->setFont(titleFont);
+    logLabel->setFont(TitleFont);
     logLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     logLabel->setStyleSheet("color:#2c2c2c");
 
@@ -534,85 +542,11 @@ void MotionControlWidget::Init(){
     splitter_3->addWidget(BTNWidget);
 
 //3d模型
-//    QLabel *model3DTitle = new QLabel(this);
-//    model3DTitle = new QLabel(this);
-//    model3DTitle->setText("3Dmodel");
-//    model3DTitle->setFont(titleFont);
-//    model3DTitle->setAlignment(Qt::AlignLeft | Qt::AlignTop);
-//    model3DTitle->setStyleSheet("color:#2c2c2c");
-
-//    //info底下的小横条
-//    QWidget *model3DSplitter = new QWidget(this);
-//    //info底下的小横条长度30，高度6
-//    model3DSplitter->setFixedSize(30, 6);
-//    model3DSplitter->setStyleSheet("background-color:#3c3c3c;border-radius:3px;");
-
-//    view = new Qt3DExtras::Qt3DWindow();
-//    //设置背景颜色
-//    view->defaultFrameGraph()->setClearColor(QColor(QRgb(0x4d4d4f)));
-//    //静态创建了一个 QWidget容器以便将其嵌入到其他 QWidget 界面中。
-//    container = QWidget::createWindowContainer(view);
-//    //将容器设置为当前窗口的子窗口
-//    container->setParent(this);
-
-//    //最小容器
-//    container->setMinimumSize(300,300);
-//    //最大容器为全屏
-//    QSize screenSize = view->screen()->size();
-//    container->setMaximumSize(screenSize);
-
-//    //创建实体
-//    mRootEntity = new Qt3DCore::QEntity;
-
-//    Qt3DRender::QCamera* camEntity = view->camera();
-//    //设置了相机的投影方式为透视投影,该函数的第一个参数是视野角度（单位为度），第二个参数是宽高比，第三个和第四个参数分别是近平面和远平面的距离。
-//    camEntity->lens()->setPerspectiveProjection(10.0f, 9.0f / 9.0f, 0.1f, 1000.0f);
-//    //设置了相机的位置,为xyz
-//    camEntity->setPosition(QVector3D(0, -10.0f, 0.0f));
-//    //设置了相机的上方向
-//    camEntity->setUpVector(QVector3D(0, 1, 0));
-//    //设置了相机的视点中心,视点中心用于确定相机的注视点
-//    camEntity->setViewCenter(QVector3D(0, 0, 0));
-//    //相机实体与轨道摄像机控制器关联起来,可以使用鼠标或手指控制相机的旋转和缩放
-//    Qt3DExtras::QOrbitCameraController *camController = new Qt3DExtras::QOrbitCameraController(mRootEntity);
-//    camController->setCamera(camEntity);
-
-//    //灯光配置
-//    lightEntity = new Qt3DCore::QEntity(mRootEntity);
-//    light = new Qt3DRender::QPointLight(lightEntity);
-//    light->setColor("white");
-//    light->setIntensity(1.2f);
-//    lightEntity->addComponent(light);
-
-//    Qt3DCore::QTransform *lightTransform = new Qt3DCore::QTransform(lightEntity);
-//    lightTransform->setTranslation(camEntity->position());
-//    lightEntity->addComponent(lightTransform);
-
-//    view->setRootEntity(mRootEntity);
-//    modifier = new SceneModifier(mRootEntity);
-
-//    QWidget *qt3dWidget = new QWidget(this);
-//    QVBoxLayout *qt3dLayout = new QVBoxLayout(this);
-//    qt3dWidget->setLayout(qt3dLayout);
-//    qt3dLayout->setContentsMargins(10, 0, 0, 0);
-//    qt3dLayout->setAlignment(Qt::AlignTop);
-//    qt3dLayout->addWidget(model3DTitle);
-//    qt3dLayout->addWidget(model3DSplitter);
-//    qt3dLayout->addWidget(container);
-
-    //获取了 Qt3D 中的一个 QWidget 的尺寸策略
-//    sizepolicy = qt3dWidget->sizePolicy();
-//    //获取了 Qt3D 中的一个 QWidget 的尺寸策略
-//    sizepolicy.setRetainSizeWhenHidden(true);
-//    //配置好的尺寸策略设置回QWidget ,下一次将其显示时，能够保持之前的尺寸大小。
-//    qt3dWidget->setSizePolicy(sizepolicy);
-
-//    splitter_4->addWidget(qt3dWidget);
 
 //info 显示深度、GPS、电量百分比
     infoTitle = new QLabel(this);
     infoTitle->setText("INFO");
-    infoTitle->setFont(titleFont);
+    infoTitle->setFont(TitleFont);
     infoTitle->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     infoTitle->setStyleSheet("color:#2c2c2c");
 
@@ -622,13 +556,14 @@ void MotionControlWidget::Init(){
     infoSplitter->setFixedSize(30, 6);
     infoSplitter->setStyleSheet("background-color:#3c3c3c;border-radius:3px;");
 
-    QFont InfoDataFont = QFont("Corbel", 15);
+    QFont InfoTitleFont = QFont("Corbel",18);
+    QFont InfoDataFont = QFont("Arial",15);
 
     //姿态信息标题
     QLabel *AttitudeInfo = new QLabel(this);
     AttitudeInfo->setText("Angle:");
     AttitudeInfo->setMinimumHeight(25);
-    AttitudeInfo->setFont(InfoDataFont);
+    AttitudeInfo->setFont(InfoTitleFont);
 
     AttitudeDataInfo->setMinimumHeight(25);
     AttitudeDataInfo->setFont(InfoDataFont);
@@ -637,10 +572,30 @@ void MotionControlWidget::Init(){
     QLabel *DepthInfo = new QLabel(this);
     DepthInfo->setText("Depth:");
     DepthInfo->setMinimumHeight(25);
-    DepthInfo->setFont(InfoDataFont);
+    DepthInfo->setFont(InfoTitleFont);
 
     DepthDataInfo->setMinimumHeight(25);
     DepthDataInfo->setFont(InfoDataFont);
+
+    //手柄数据输出
+    QLabel *JoystickInfo = new QLabel(this);
+    JoystickInfo->setText("Joystick:");
+    JoystickInfo->setMinimumHeight(25);
+    JoystickInfo->setFont(InfoTitleFont);
+
+    JoystickAxisDataInfo->setMinimumHeight(25);
+    JoystickAxisDataInfo->setFont(InfoDataFont);
+
+    connect(this,&MotionControlWidget::axisChange,this,[=]()
+    {
+        QString str;
+        //将double截取为整数，并且转换为QString
+        QString x = QString::number(std::floor(axis.LeftX));
+        QString y = QString::number(std::floor(axis.LeftY));
+        str = "x " + x + " " + "y " + y + "\r\n";
+        emit axisSend(str);
+        JoystickAxisDataInfo->setText(str);
+    });
 
     infoWidget = new QWidget(this);
     infoWidget->setSizePolicy(sizepolicy);
@@ -655,6 +610,8 @@ void MotionControlWidget::Init(){
     infoLayout->addWidget(AttitudeDataInfo);
     infoLayout->addWidget(DepthInfo);
     infoLayout->addWidget(DepthDataInfo);
+    infoLayout->addWidget(JoystickInfo);
+    infoLayout->addWidget(JoystickAxisDataInfo);
 
     splitter_4->addWidget(infoWidget);
 

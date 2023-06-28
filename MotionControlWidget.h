@@ -48,9 +48,9 @@ private:
     QLabel *logTitle;
     QLabel *infoTitle;
 
-    QLabel *CurrPID_P = new QLabel("P:",this);   //当前P值显示标签
-    QLabel *CurrPID_I = new QLabel("I:",this);   //当前I值显示标签
-    QLabel *CurrPID_D = new QLabel("D:",this);   //当前D值显示标签
+    QLabel *CurrPID_P = new QLabel("P:              0",this);   //当前P值显示标签
+    QLabel *CurrPID_I = new QLabel("I:              0",this);   //当前I值显示标签
+    QLabel *CurrPID_D = new QLabel("D:              0",this);   //当前D值显示标签
 
     customIcon *WIcon = nullptr;    //按键W图标
     customIcon *AIcon = nullptr;    //按键A图标
@@ -74,6 +74,7 @@ private:
 
     QLabel *AttitudeDataInfo = new QLabel(this);    //Info姿态数据
     QLabel *DepthDataInfo = new QLabel(this);       //Info深度数据
+    QLabel *JoystickAxisDataInfo = new QLabel(this);        //Info手柄坐标数据
 
     QString modeName;
     QString ctrDescrip;
@@ -117,12 +118,22 @@ public:
 
     textButton *SetPIDBTN;  //设置PID值按钮
 
+    typedef struct
+    {
+        double LeftX;
+        double LastLeftX;
+        double LeftY;
+        double LastLeftY;
+    }Axis;
+
 signals:
     void SendDataSignal();  //发送数据信号往主窗口
     void StartDataSort(QStringList ProcessedData);
     void AttitudeChange(QString pitch, QString yaw, QString roll);
     void SetPIDSignal();   //设置PID信号往主窗口
     void SendControlSignal(QString str);  //发送控制信号往主窗口
+    void axisChange(MotionControlWidget::Axis axis);
+    void axisSend(QString str);
 
 public slots:
     void DataDisplayPTE(QString serialBuf);
@@ -134,8 +145,6 @@ private slots:
 
     void joysitck_axis(int js_index, int axis_index, qreal value);  //获取手柄摇杆信息
     void joysitck_button(int js_index, int button_index, bool pressed);//获取手柄按键信息
-
-
 };
 
 #endif // MONTIONCONTROLWIDGET_H

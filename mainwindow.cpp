@@ -457,6 +457,11 @@ void MainWindow::InitSerialPage()
         qDebug() << PIDValue;
         serial->write(PIDValue.toLocal8Bit().data());
     });
+
+    //将手柄坐标数值发送给下位机
+    connect(motionControlWidget,&MotionControlWidget::axisSend,this,[=](QString str){
+        serial->write(str.toLocal8Bit().data());
+    });
 }
 
 /* 初始化数据显示窗口 */
