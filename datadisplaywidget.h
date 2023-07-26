@@ -17,8 +17,8 @@
 #include <QGuiApplication>
 #include <QPlainTextEdit>
 
-#include "slidepage.h"
-#include "customWidgets.h"
+#include "./frame/slidepage.h"
+#include "./frame/customWidgets.h"
 
 #if (QT_VERSION > QT_VERSION_CHECK(6,3,0))
 #include <QFileDialog>

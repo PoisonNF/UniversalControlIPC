@@ -12,25 +12,29 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    customScrollContainer.cpp \
-    customWidgets.cpp \
     datadisplaywidget.cpp \
-    graph_view.cpp \
+    frame/customScrollContainer.cpp \
+    frame/customWidgets.cpp \
+    frame/graph_implement.cpp \
+    frame/graph_view.cpp \
+    frame/scenemodifier.cpp \
+    frame/slidedialog.cpp \
+    frame/slidepage.cpp \
     main.cpp \
     mainwindow.cpp \
-    motioncontrolwidget.cpp \
-    slidedialog.cpp \
-    slidepage.cpp
+    motioncontrolwidget.cpp
 
 HEADERS += \
-    customScrollContainer.h \
-    customWidgets.h \
     datadisplaywidget.h \
-    graph_view.h \
+    frame/customScrollContainer.h \
+    frame/customWidgets.h \
+    frame/graph_implement.h \
+    frame/graph_view.h \
+    frame/scenemodifier.h \
+    frame/slidedialog.h \
+    frame/slidepage.h \
     mainwindow.h \
-    motioncontrolwidget.h \
-    slidedialog.h \
-    slidepage.h
+    motioncontrolwidget.h
 
 FORMS += \
     mainwindow.ui

@@ -9,7 +9,7 @@
 #include <QSerialPortInfo>
 #include <QComboBox>
 #include <QMessageBox>
-#include "slidedialog.h"
+#include "./frame/slidedialog.h"
 #include "datadisplaywidget.h"
 #include "motioncontrolwidget.h"
 

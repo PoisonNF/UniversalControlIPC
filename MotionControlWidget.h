@@ -18,8 +18,8 @@
 #include <QPlainTextEdit>
 #include <QMessageBox>
 
-#include "slidepage.h"
-#include "customWidgets.h"
+#include "./frame/slidepage.h"
+#include "./frame/customWidgets.h"
 #include "QJoysticks.h"
 
 #if (QT_VERSION > QT_VERSION_CHECK(6,3,0))
