@@ -22,7 +22,9 @@ SOURCES += \
     frame/slidepage.cpp \
     main.cpp \
     mainwindow.cpp \
-    motioncontrolwidget.cpp
+    motioncontrolwidget.cpp \
+    serialdataanalyze.cpp \
+    serialreaddata.cpp
 
 HEADERS += \
     datadisplaywidget.h \
@@ -34,7 +36,9 @@ HEADERS += \
     frame/slidedialog.h \
     frame/slidepage.h \
     mainwindow.h \
-    motioncontrolwidget.h
+    motioncontrolwidget.h \
+    serialdataanalyze.h \
+    serialreaddata.h
 
 FORMS += \
     mainwindow.ui

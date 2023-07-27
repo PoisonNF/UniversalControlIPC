@@ -395,13 +395,13 @@ void MotionControlWidget::Init(){
     Thruster4->setMinimumHeight(25);
     Thruster4->setFont(ThrusterTitleFont);
 
-    ThrusterData1->setMinimumSize(100,20);
+    ThrusterData1->setMinimumSize(80,20);
     ThrusterData1->setFont(ThrusterDataFont);
-    ThrusterData2->setMinimumSize(100,20);
+    ThrusterData2->setMinimumSize(80,20);
     ThrusterData2->setFont(ThrusterDataFont);
-    ThrusterData3->setMinimumSize(100,20);
+    ThrusterData3->setMinimumSize(80,20);
     ThrusterData3->setFont(ThrusterDataFont);
-    ThrusterData4->setMinimumSize(100,20);
+    ThrusterData4->setMinimumSize(80,20);
     ThrusterData4->setFont(ThrusterDataFont);
 
     //舵机名称标签和数据标签设置
@@ -628,22 +628,6 @@ void MotionControlWidget::Init(){
     splitter_4->setStretchFactor(0,1);
     splitter_4->setStretchFactor(1,2);
 
-    //内部数据分拣逻辑连接
-    DataSortConnect();
-}
-
-//数据分类链接函数
-void MotionControlWidget::DataSortConnect()
-{
-    //姿态分拣
-    connect(this,&MotionControlWidget::StartDataSort,this,&MotionControlWidget::AttitudeDataSort);
-    //推进力分拣
-    connect(this,&MotionControlWidget::StartDataSort,this,&MotionControlWidget::PropulsionSysDataSort);
-    //深度分拣
-    connect(this,&MotionControlWidget::StartDataSort,this,&MotionControlWidget::DepthDataSort);
-
-    //根据姿态，3D模型转向
-    //connect(this,&MotionControlWidget::AttitudeChange,modifier,&SceneModifier::OnSetRotation);
 }
 
 void MotionControlWidget::keyPressEvent(QKeyEvent *event)
@@ -698,104 +682,58 @@ void MotionControlWidget::keyPressEvent(QKeyEvent *event)
 }
 
 //数据显示到PlainTextEdit中，发起数据分拣信号
-void MotionControlWidget::DataDisplayPTE(QString serialBuf)
+void MotionControlWidget::slotLogDataDisplay(QString serialBuf)
 {
     if(!this->isHidden())
     {
         logPTE->ensureCursorVisible();
         logPTE->insertPlainText(serialBuf);
-        //qDebug()<<serialBuf;
-
-        //开始数据分拣
-        //以空格进行分割数据，用于判断数据来源
-        QStringList ProcessedData = serialBuf.split(u' ');
-        //qDebug() << ProcessedData;
-
-        emit StartDataSort(ProcessedData);
     }
 }
 
-//推进系统数据分拣
-void MotionControlWidget::PropulsionSysDataSort(QStringList ProcessedData)
+void MotionControlWidget::slotAngleDataDisplay(QStringList ProcessedData)
 {
-    //是推进器的数据
-    if(ProcessedData.at(0) == "T")
+    if(!this->isHidden())
     {
-        if(ProcessedData.at(1) == "1")
+        AttitudeDataInfo->setText(QString("Roll%1    Pitch%2    Yaw%3")
+                                 .arg(ProcessedData.at(2),ProcessedData.at(3),ProcessedData.at(4)));    //Roll Pitch Yaw
+    }
+}
+
+void MotionControlWidget::slotDepthDataDisplay(QStringList ProcessedData)
+{
+    if(!this->isHidden())
+    {
+
+    }
+}
+
+void MotionControlWidget::slotThrusterDataDisplay(QStringList ProcessedData, int ThrusterNum)
+{
+    if(!this->isHidden())
+    {
+        switch(ThrusterNum)
         {
-            //qDebug() << "NO1的数据";
+        case 1:
             ThrusterData1->setText(QString("%1")
                                    .arg(ProcessedData.at(2)));
-        }
-        else if(ProcessedData.at(1) == "2")
-        {
-            //qDebug() << "NO2的数据";
+            break;
+        case 2:
             ThrusterData2->setText(QString("%1")
                                    .arg(ProcessedData.at(2)));
-        }
-        else if(ProcessedData.at(1) == "3")
-        {
-            //qDebug() << "NO3的数据";
+            break;
+        case 3:
             ThrusterData3->setText(QString("%1")
                                    .arg(ProcessedData.at(2)));
-        }
-        else if(ProcessedData.at(1) == "4")
-        {
-            //qDebug() << "NO4的数据";
+            break;
+        case 4:
             ThrusterData4->setText(QString("%1")
                                    .arg(ProcessedData.at(2)));
+            break;
+        default:
+            break;
         }
     }
-    //是舵机的数据
-//    else if(ProcessedData.at(0) == "S")
-//    {
-//        if(ProcessedData.at(1) == "1")
-//        {
-//            //qDebug() << "NO1的数据";
-//            ServoData1->setText(QString("%1")
-//                                   .arg(ProcessedData.at(2)));
-//        }
-//        else if(ProcessedData.at(1) == "2")
-//        {
-//            //qDebug() << "NO2的数据";
-//            ServoData2->setText(QString("%1")
-//                                   .arg(ProcessedData.at(2)));
-//        }
-//        else if(ProcessedData.at(1) == "3")
-//        {
-//            //qDebug() << "NO3的数据";
-//            ServoData3->setText(QString("%1")
-//                                   .arg(ProcessedData.at(2)));
-//        }
-//        else if(ProcessedData.at(1) == "4")
-//        {
-//            //qDebug() << "NO4的数据";
-//            ServoData4->setText(QString("%1")
-//                                   .arg(ProcessedData.at(2)));
-//        }
-//    }
-}
-
-//姿态数据分拣
-void MotionControlWidget::AttitudeDataSort(QStringList ProcessedData)
-{
-    //如果是JY901S的数据
-    if(ProcessedData.count() > 0 && ProcessedData.at(0) == "J")
-    {
-        //如果是姿态角数据
-        if(ProcessedData.at(1) == "Angle")
-        {
-            //qDebug() << "姿态角";
-            AttitudeDataInfo->setText(QString("Roll%1    Pitch%2    Yaw%3")
-                                     .arg(ProcessedData.at(2),ProcessedData.at(3),ProcessedData.at(4)));    //Roll Pitch Yaw
-            //emit AttitudeChange(ProcessedData.at(3),ProcessedData.at(4),ProcessedData.at(2));   //发射信号，改变3D模型朝向
-        }
-    }
-}
-
-void MotionControlWidget::DepthDataSort(QStringList ProcessedData)
-{
-
 }
 
 void MotionControlWidget::joysitck_axis(int js_index, int axis_index, qreal value)

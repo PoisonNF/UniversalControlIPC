@@ -410,12 +410,6 @@ void MainWindow::InitSerialPage()
     connect(openSerialBtn, &textButton::clicked, this, &MainWindow::OpenSerialPort);
     //按下关闭串口按钮时，关闭串口
     connect(closeSerialBtn, &textButton::clicked, this, &MainWindow::CloseSerialPort);
-    //当串口数据准备可读时，读取其中的数据
-    connect(serial,&QSerialPort::readyRead,this,&MainWindow::ReadData);
-
-    //接收到读取完成信号，根据界面隐藏情况，显示在不同界面的接收框中
-    //connect(this,&MainWindow::DataReadCplt,dataDisplayWidget,&DataDisplayWidget::DataDisplayPTE);
-    connect(this,&MainWindow::DataReadCplt,motionControlWidget,&MotionControlWidget::DataDisplayPTE);
 
     //接收到数据显示界面发送信号，往串口中写入发送框的数据
 //    connect(dataDisplayWidget,&DataDisplayWidget::SendDataSignal,this,[=]()
@@ -551,6 +545,42 @@ void MainWindow::OpenSerialPort()
         closeSerialBtn->setEnabled(true);
 
         QMessageBox::information(this,"提示信息","串口已经被成功打开");
+
+        //启动数据接收线程
+        qDebug() << "外部serial" << serial;
+        QThread *SRDthread = new QThread;
+        SRDwork = new SerialReadData(serial);
+        SRDwork->moveToThread(SRDthread);
+        connect(serial,&QSerialPort::readyRead,SRDwork,&SerialReadData::SRDworking);    //当串口有数据时，线程工作
+        SRDthread->start();
+
+        //启动数据分析线程
+        QThread *SDAthread = new QThread;
+        SDAwork = new SerialDataAnalyze;
+        SDAwork->moveToThread(SDAthread);
+        SDAthread->start();
+
+        //当线程完成读取时，根据空格整理数据，发送给数据分析线程
+        connect(SRDwork,&SerialReadData::sigDataSort,SDAwork,&SerialDataAnalyze::SDAworking);
+
+        //当线程完成读取时，要求显示在MotionControlWidget的Log控件中
+        connect(SRDwork,&SerialReadData::sigLogDataDisplay,motionControlWidget,&MotionControlWidget::slotLogDataDisplay);
+        //当线程完成分析时，发送给MotionControlWidget显示在对应的控件中
+        connect(SDAwork,&SerialDataAnalyze::sigAngleDataAnalyze,motionControlWidget,&MotionControlWidget::slotAngleDataDisplay);
+        connect(SDAwork,&SerialDataAnalyze::sigDepthDataAnalyze,motionControlWidget,&MotionControlWidget::slotDepthDataDisplay);
+        connect(SDAwork,&SerialDataAnalyze::sigThrusterDataAnalyze,motionControlWidget,&MotionControlWidget::slotThrusterDataDisplay);
+
+        //线程资源释放
+        connect(this,&MainWindow::destroyed,this,[=]()
+        {
+            SRDthread->quit();
+            SRDthread->wait();
+            SRDthread->deleteLater();
+
+            SDAthread->quit();
+            SDAthread->wait();
+            SDAthread->deleteLater();
+        });
     }
     else
         QMessageBox::warning(this,"错误","打开串口失败");
@@ -567,17 +597,6 @@ void MainWindow::CloseSerialPort()
         QMessageBox::information(this,"提示信息","串口关闭成功");
         return;
     }
-}
-
-/* 数据读取发射信号槽函数 */
-void MainWindow::ReadData()
-{
-    QString serialBuf;    //储存接收到的数据
-    serialBuf = QString(serial->readLine());
-    //qDebug() << buf;
-
-    //发射信号给datadisplay窗口
-    emit DataReadCplt(serialBuf);
 }
 
 MainWindow::~MainWindow()

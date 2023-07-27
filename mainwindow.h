@@ -9,9 +9,12 @@
 #include <QSerialPortInfo>
 #include <QComboBox>
 #include <QMessageBox>
+#include <QThread>
 #include "./frame/slidedialog.h"
 #include "datadisplaywidget.h"
 #include "motioncontrolwidget.h"
+#include "serialreaddata.h"
+#include "serialdataanalyze.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -65,6 +68,8 @@ private:
     QComboBox *stopBitsCBox;
     QComboBox *flowCtlCBox;
 
+    SerialReadData *SRDwork = nullptr;
+    SerialDataAnalyze *SDAwork = nullptr;
 
     //函数声明
     void Init();            //界面初始化
@@ -102,12 +107,12 @@ private:
     bool maximized = false;
     QRect lastGeometry;
     void controlWindowScale();
+
 private slots:
     void ChangeDataDisplayWidget();  //切换到数据显示的窗口槽函数
     void ChangeMotionControlWidget();   //切换到运动控制串口槽函数
     void OpenSerialPort();  //打开串口
     void CloseSerialPort(); //关闭串口
-    void ReadData(); //读取串口数据
 
 public slots:
 
@@ -117,11 +122,8 @@ signals:
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-
 private:
     Ui::MainWindow *ui;
 };
-
-
 
 #endif // MAINWINDOW_H

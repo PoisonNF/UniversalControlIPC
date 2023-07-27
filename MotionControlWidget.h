@@ -95,7 +95,6 @@ private:
     void SaveToFile(const QString &path);
     void ModeSelectPage(int r); //模式选择页
     void JoysticksInit();       //手柄初始化
-    void DataSortConnect();     //数据分类链接函数
 
     void keyPressEvent(QKeyEvent *event);   //重写键盘按下事件
 
@@ -128,7 +127,6 @@ public:
 
 signals:
     void SendDataSignal();  //发送数据信号往主窗口
-    void StartDataSort(QStringList ProcessedData);
     void AttitudeChange(QString pitch, QString yaw, QString roll);
     void SetPIDSignal();   //设置PID信号往主窗口
     void SendControlSignal(QString str);  //发送控制信号往主窗口
@@ -136,13 +134,12 @@ signals:
     void axisSend(QString str);
 
 public slots:
-    void DataDisplayPTE(QString serialBuf);
+    void slotLogDataDisplay(QString serialBuf);
+    void slotAngleDataDisplay(QStringList ProcessedData);
+    void slotDepthDataDisplay(QStringList ProcessedData);
+    void slotThrusterDataDisplay(QStringList ProcessedData,int ThrusterNum);
 
 private slots:
-    void PropulsionSysDataSort(QStringList ProcessedData);  //动力系统数据分拣槽函数
-    void AttitudeDataSort(QStringList ProcessedData);   //分拣JY901S中的姿态数据
-    void DepthDataSort(QStringList ProcessedData);   //分拣深度数据
-
     void joysitck_axis(int js_index, int axis_index, qreal value);  //获取手柄摇杆信息
     void joysitck_button(int js_index, int button_index, bool pressed);//获取手柄按键信息
 };
