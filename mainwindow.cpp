@@ -422,7 +422,7 @@ void MainWindow::InitSerialPage()
 //    });
 
     //接收到运动控制发送信号，往串口中写入发送框的数据
-    connect(motionControlWidget,&MotionControlWidget::SendDataSignal,this,[=]()
+    connect(motionControlWidget,&MotionControlWidget::sigLogDataSend,this,[=]()
     {
         if(!motionControlWidget->isHidden())    //如果运动控制界面没有被隐藏
         {
@@ -453,7 +453,11 @@ void MainWindow::InitSerialPage()
     });
 
     //将手柄坐标数值发送给下位机
-    connect(motionControlWidget,&MotionControlWidget::axisSend,this,[=](QString str){
+    connect(motionControlWidget,&MotionControlWidget::sigJoyAxisSend,this,[=](QString str){
+        serial->write(str.toLocal8Bit().data());
+    });
+    //将手柄按键状态发送给下位机
+    connect(motionControlWidget,&MotionControlWidget::sigJoyButtonSend,this,[=](QString str){
         serial->write(str.toLocal8Bit().data());
     });
 }
@@ -522,7 +526,6 @@ void MainWindow::OpenSerialPort()
     textPortName = comPortCBox->currentText();
     //根据“：”分割字符串，保留COMx部分
     QStringList PortName = textPortName.split(":");
-    //qDebug() << PortName.at(0) << PortName.at(1);
     serial->setPortName(PortName[0]);
 
     //设置串口通信参数
@@ -688,6 +691,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event){
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event){
+    Q_UNUSED(event);
     //Resize border
     if(border)
         border->resize(ui->mainWidget->size() + QSize(2, 2));

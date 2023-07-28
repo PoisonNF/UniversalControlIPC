@@ -22,10 +22,10 @@ private:
     bool pressed = false;
     bool enabled = true;
     QWidget *bg;
-    void mousePressEvent(QMouseEvent *event){if(enabled)pressed = true;}
-    void mouseReleaseEvent(QMouseEvent *event){if(enabled && pressed)emit clicked();pressed = false;}
+    void mousePressEvent(QMouseEvent *event){Q_UNUSED(event);if(enabled)pressed = true;}
+    void mouseReleaseEvent(QMouseEvent *event){Q_UNUSED(event);if(enabled && pressed)emit clicked();pressed = false;}
 protected:
-    void resizeEvent(QResizeEvent *event){bg->resize(this->parentWidget()->size());}
+    void resizeEvent(QResizeEvent *event){Q_UNUSED(event);bg->resize(this->parentWidget()->size());}
 public:
     SheildLayer(QWidget *parent = nullptr) : QWidget(parent){
         bg = new QWidget(this);

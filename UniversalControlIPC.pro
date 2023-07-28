@@ -17,9 +17,9 @@ SOURCES += \
     frame/customWidgets.cpp \
     frame/graph_implement.cpp \
     frame/graph_view.cpp \
-    frame/scenemodifier.cpp \
     frame/slidedialog.cpp \
     frame/slidepage.cpp \
+    joysticks.cpp \
     main.cpp \
     mainwindow.cpp \
     motioncontrolwidget.cpp \
@@ -32,9 +32,9 @@ HEADERS += \
     frame/customWidgets.h \
     frame/graph_implement.h \
     frame/graph_view.h \
-    frame/scenemodifier.h \
     frame/slidedialog.h \
     frame/slidepage.h \
+    joysticks.h \
     mainwindow.h \
     motioncontrolwidget.h \
     serialdataanalyze.h \

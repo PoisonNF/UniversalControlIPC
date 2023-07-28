@@ -21,6 +21,7 @@
 #include "./frame/slidepage.h"
 #include "./frame/customWidgets.h"
 #include "QJoysticks.h"
+#include "joysticks.h"
 
 #if (QT_VERSION > QT_VERSION_CHECK(6,3,0))
 #include <QFileDialog>
@@ -75,6 +76,7 @@ private:
     QLabel *AttitudeDataInfo = new QLabel(this);    //Info姿态数据
     QLabel *DepthDataInfo = new QLabel(this);       //Info深度数据
     QLabel *JoystickAxisDataInfo = new QLabel(this);        //Info手柄坐标数据
+    QLabel *JoystickButtonDataInfo = new QLabel(this);        //Info手柄按键数据
 
     QString modeName;
     QString ctrDescrip;
@@ -90,6 +92,7 @@ private:
     Qt::Key CurrentKey; //当前按下按键的键值
 
     QJoysticks* m_joystick;
+    Joysticks *JSwork;
 
     void Init();
     void SaveToFile(const QString &path);
@@ -117,21 +120,13 @@ public:
 
     textButton *SetPIDBTN;  //设置PID值按钮
 
-    typedef struct
-    {
-        double LeftX;
-        double LastLeftX;
-        double LeftY;
-        double LastLeftY;
-    }Axis;
-
 signals:
-    void SendDataSignal();  //发送数据信号往主窗口
-    void AttitudeChange(QString pitch, QString yaw, QString roll);
+    void sigLogDataSend();  //发送数据信号往主窗口
+    //void AttitudeChange(QString pitch, QString yaw, QString roll);
     void SetPIDSignal();   //设置PID信号往主窗口
     void SendControlSignal(QString str);  //发送控制信号往主窗口
-    void axisChange(MotionControlWidget::Axis axis);
-    void axisSend(QString str);
+    void sigJoyAxisSend(QString str);     //发送手柄坐标数据往主窗口
+    void sigJoyButtonSend(QString str);   //发送手柄按键数据往主窗口
 
 public slots:
     void slotLogDataDisplay(QString serialBuf);
@@ -140,8 +135,6 @@ public slots:
     void slotThrusterDataDisplay(QStringList ProcessedData,int ThrusterNum);
 
 private slots:
-    void joysitck_axis(int js_index, int axis_index, qreal value);  //获取手柄摇杆信息
-    void joysitck_button(int js_index, int button_index, bool pressed);//获取手柄按键信息
 };
 
 #endif // MONTIONCONTROLWIDGET_H

@@ -29,6 +29,8 @@ DataDisplayWidget::DataDisplayWidget(int radius, QWidget *parent) :
 DataDisplayWidget::DataDisplayWidget(QTextStream &ts, int radius, QWidget *parent) :
     QWidget(parent)
 {
+    Q_UNUSED(ts);
+    Q_UNUSED(radius);
     mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
     this->setLayout(mainLayout);

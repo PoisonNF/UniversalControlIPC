@@ -1,9 +1,4 @@
-#include "MotionControlWidget.h"
-
-int axisXChange = 0;
-int axisYChange = 0;
-
-MotionControlWidget::Axis axis;
+#include "motioncontrolwidget.h"
 
 MotionControlWidget::MotionControlWidget(int radius, QWidget *parent) :
     QWidget(parent)
@@ -29,44 +24,6 @@ MotionControlWidget::MotionControlWidget(int radius, QWidget *parent) :
     });
     delay->setSingleShot(true);
     delay->start(10);
-
-    //定时器，用于监听手柄数据
-    QTimer *timer = new QTimer(this);
-    connect(timer, &QTimer::timeout,this,[=](){
-        if(axis.LeftX != 0)
-        {
-            //如果上次也是500，不发送
-            if(axis.LastLeftX != 500)
-            {
-                qDebug() << "X" << axis.LeftX;
-                axisXChange = 1;
-            }
-            else
-                axisXChange = 0;
-            axis.LastLeftX = axis.LeftX;  //寄存数据
-        }
-
-        if(axis.LeftY != 0)
-        {
-            //如果上次也是500，不发送
-            if(axis.LastLeftY != 500)
-            {
-                qDebug() << "Y" << axis.LeftY;
-                axisYChange = 1;
-            }
-            else
-                axisYChange = 0;
-            axis.LastLeftY = axis.LeftY;  //寄存数据
-        }
-
-        if(axisXChange == 1 || axisYChange == 1)
-        {
-            emit axisChange(axis);
-        }
-    });
-
-    // 启动定时器和事件循环
-    timer->start(500);
 }
 
 //在数据显示界面的设置栏this->parentWidget());
@@ -100,17 +57,60 @@ void MotionControlWidget::ModeSelectPage(int radius){
 void MotionControlWidget::JoysticksInit()
 {
     m_joystick = QJoysticks::getInstance();
+    QStringList js_names = m_joystick->deviceNames();    //添加手柄
+    qDebug() << js_names;
 
-    connect(m_joystick, SIGNAL(axisChanged(int, int, qreal)), this, SLOT(joysitck_axis(int, int, qreal)));
+    QThread *JSThread = new QThread;
+    JSwork = new Joysticks;
+    JSwork->moveToThread(JSThread);
+    JSThread->start();
+
+    connect(m_joystick,SIGNAL(axisChanged(int,int,qreal)),JSwork,SLOT(Joysticksworking(int,int,qreal)));
+    connect(m_joystick,SIGNAL(buttonChanged(int,int,bool)),JSwork,SLOT(Joysticksworking(int,int,bool)));
+
+    connect(JSwork,&Joysticks::sigJoysticksValueGet,this,[=](Joysticks::JoystickData JoyData)
+    {
+        QString str;
+        QString sendstr;
+
+        //将double截取为整数，并且转换为QString
+        QString x = QString::number(std::floor(JoyData.LeftX));
+        QString y = QString::number(std::floor(JoyData.LeftY));
+
+        QString angle = QString::number(std::floor(JoyData.Angle));
+        QString length = QString::number(std::floor(JoyData.Length));
+
+        str = "x " + x + " y " + y + " angle " + angle + " length " + length;
+        sendstr = "angle " + angle + " " + "length " + length + "\r\n";
+        emit sigJoyAxisSend(sendstr);
+        JoystickAxisDataInfo->setText(str);
+    });
+
+    connect(JSwork,&Joysticks::sigJoysticksButtonGet,this,[=](Joysticks::JoystickData JoyData)
+    {
+        QString str;
+
+        //根据按键状态发送不同的字符串给下位机
+        if(JoyData.Status){
+            str = "Button " + QString::number(JoyData.Button) + " press" + "\r\n";
+        }
+        else {
+            str = "Button " + QString::number(JoyData.Button) + " release" + "\r\n";
+        }
+
+        emit sigJoyButtonSend(str);
+        JoystickButtonDataInfo->setText(str);
+    });
+
+    //connect(m_joystick, SIGNAL(axisChanged(int, int, qreal)), this, SLOT(joysitck_axis(int, int, qreal)));
     //connect(m_joystick, &QJoysticks::axisEvent, this, &MainWindow::event_axis);
 
-    connect(m_joystick, SIGNAL(buttonChanged(int, int, bool)), this, SLOT(joysitck_button(int, int, bool)));
+    //connect(m_joystick, SIGNAL(buttonChanged(int, int, bool)), this, SLOT(joysitck_button(int, int, bool)));
     //connect(m_joystick, &QJoysticks::buttonEvent, this, &MainWindow::event_button);
 
     //m_joystick->setVirtualJoystickEnabled (true);    //启用虚拟手柄
     //m_joystick->setVirtualJoystickRange (1);    //设置虚拟手柄摇杆范围[-1,1]
-    QStringList js_names = m_joystick->deviceNames();    //添加手柄
-    qDebug() << js_names;
+
 }
 
 void MotionControlWidget::Init(){
@@ -496,10 +496,12 @@ void MotionControlWidget::Init(){
 
     //log框设置，包含PTE和LE，使用垂直布局
     //用于显示接收串口传过来的数据
+    QFont logPTEFont = QFont("Arial",10);
     logPTE = new QPlainTextEdit;
     logPTE->setReadOnly(true);
     logPTE->setMinimumSize(300,185);
-    logPTE->setStyleSheet("background-color: black; color: black;border-radius:3px; background-color: #00000000;font: 20px 'Corbel Light'; border: 1px solid darkgray;");
+    logPTE->setFont(logPTEFont);
+    logPTE->setStyleSheet("background-color: black; color: black;border-radius:3px; background-color: #00000000; border: 1px solid darkgray;");
 
     //串口发送行
     logTII = new textInputItem("Send Line:",this);
@@ -520,7 +522,7 @@ void MotionControlWidget::Init(){
 
     //按下发送键，发送发送数据信号给主窗口
     connect(SendBTN,&textButton::clicked,this,[=](){
-        emit SendDataSignal();
+        emit sigLogDataSend();
     });
 
     //按下清屏键，清除接收框和发送框所有的数据
@@ -586,16 +588,8 @@ void MotionControlWidget::Init(){
     JoystickAxisDataInfo->setMinimumHeight(25);
     JoystickAxisDataInfo->setFont(InfoDataFont);
 
-    connect(this,&MotionControlWidget::axisChange,this,[=]()
-    {
-        QString str;
-        //将double截取为整数，并且转换为QString
-        QString x = QString::number(std::floor(axis.LeftX));
-        QString y = QString::number(std::floor(axis.LeftY));
-        str = "x " + x + " " + "y " + y + "\r\n";
-        emit axisSend(str);
-        JoystickAxisDataInfo->setText(str);
-    });
+    JoystickButtonDataInfo->setMinimumHeight(25);
+    JoystickButtonDataInfo->setFont(InfoDataFont);
 
     infoWidget = new QWidget(this);
     infoWidget->setSizePolicy(sizepolicy);
@@ -612,6 +606,7 @@ void MotionControlWidget::Init(){
     infoLayout->addWidget(DepthDataInfo);
     infoLayout->addWidget(JoystickInfo);
     infoLayout->addWidget(JoystickAxisDataInfo);
+    infoLayout->addWidget(JoystickButtonDataInfo);
 
     splitter_4->addWidget(infoWidget);
 
@@ -736,30 +731,6 @@ void MotionControlWidget::slotThrusterDataDisplay(QStringList ProcessedData, int
     }
 }
 
-void MotionControlWidget::joysitck_axis(int js_index, int axis_index, qreal value)
-{
-    if (m_joystick->joystickExists(js_index)){
-        //左右
-        if (axis_index == 0){
-            // axis range [-1, 1] -> range [0, 1000];
-            //qDebug() << "x" << value*500+500;
-            axis.LeftX = value*500+500;
-        }
-        //上下
-        else if (axis_index == 1){
-            // axis range [-1, 1] -> range [0, 1000];
-            //qDebug() << "y" << value*500+500;
-            axis.LeftY = value*500+500;
-        }
-    }
-}
-
-void MotionControlWidget::joysitck_button(int js_index, int button_index, bool pressed)
-{
-    if (m_joystick->joystickExists(js_index)){
-        qDebug() << button_index << pressed;
-    }
-}
 
 //暂不使用
 void MotionControlWidget::SaveToFile(const QString &path){

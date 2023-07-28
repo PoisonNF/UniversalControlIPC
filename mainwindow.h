@@ -117,7 +117,7 @@ private slots:
 public slots:
 
 signals:
-    void DataReadCplt(QString serialBuf);
+
 
 public:
     MainWindow(QWidget *parent = nullptr);
