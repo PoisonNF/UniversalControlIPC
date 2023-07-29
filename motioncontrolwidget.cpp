@@ -19,7 +19,6 @@ MotionControlWidget::MotionControlWidget(int radius, QWidget *parent) :
     QTimer *delay = new QTimer(this);
     connect(delay, &QTimer::timeout, this, [=](){
         Init();
-        JoysticksInit();
         delay->deleteLater();   //超时后释放内存
     });
     delay->setSingleShot(true);
@@ -54,7 +53,17 @@ void MotionControlWidget::ModeSelectPage(int radius){
     settings->show();
 }
 
-void MotionControlWidget::JoysticksInit()
+void MotionControlWidget::Init(){
+    InitJoysticks();            //初始化手柄
+    InitLayout();               //初始化总体布局
+    InitPIDWidget();            //初始化PID窗口
+    InitControlWidget();        //初始化控制窗口
+    InitPropulsionSysWidget();  //初始化动力系统窗口
+    InitLogWidget();            //初始化串口log窗口
+    InitInfoWidget();           //初始化信息窗口
+}
+
+void MotionControlWidget::InitJoysticks()
 {
     m_joystick = QJoysticks::getInstance();
     QStringList js_names = m_joystick->deviceNames();    //添加手柄
@@ -110,11 +119,11 @@ void MotionControlWidget::JoysticksInit()
 
     //m_joystick->setVirtualJoystickEnabled (true);    //启用虚拟手柄
     //m_joystick->setVirtualJoystickRange (1);    //设置虚拟手柄摇杆范围[-1,1]
-
 }
 
-void MotionControlWidget::Init(){
-//layout
+void MotionControlWidget::InitLayout()
+{
+    //layout
 
     //1为最大的布局器，2，3，4分别为垂直布局器，对应左中右
     splitter_1 = new QSplitter(this);
@@ -131,6 +140,20 @@ void MotionControlWidget::Init(){
     splitter_1->addWidget(splitter_3);
     splitter_1->addWidget(splitter_4);
 
+
+    splitter_1->setStretchFactor(0,2);
+    splitter_1->setStretchFactor(1,7);
+    splitter_1->setStretchFactor(2,2);
+
+    splitter_2->setStretchFactor(0,1);
+    splitter_2->setStretchFactor(1,1);
+
+    splitter_3->setStretchFactor(0,5);
+    splitter_3->setStretchFactor(1,1);
+
+    splitter_4->setStretchFactor(0,1);
+    splitter_4->setStretchFactor(1,2);
+
     //设置布局策略
     QSizePolicy sizepolicy = QSizePolicy(QSizePolicy::Preferred,QSizePolicy::Minimum);
     sizepolicy.setVerticalPolicy(QSizePolicy::Expanding);
@@ -140,9 +163,11 @@ void MotionControlWidget::Init(){
     splitter_2->setSizePolicy(sizepolicy);
     splitter_3->setSizePolicy(sizepolicy);
     splitter_4->setSizePolicy(sizepolicy);
+}
 
-//PID参数设置与发送
-    QFont TitleFont = QFont("Corbel", 20);
+void MotionControlWidget::InitPIDWidget()
+{
+    //PID参数设置与发送
     PIDTitle = new QLabel(this);
     PIDTitle->setText("PID");
     PIDTitle->setFont(TitleFont);
@@ -242,8 +267,11 @@ void MotionControlWidget::Init(){
     PIDLayout->addWidget(PIDDataWidget);
 
     splitter_2->addWidget(PIDWidget);
+}
 
-//按键显示和读取，或者使用鼠标点击，发送动作命令
+void MotionControlWidget::InitControlWidget()
+{
+    //按键显示和读取，或者使用鼠标点击，发送动作命令
     ControlTitle = new QLabel(this);
     ControlTitle->setText("Control");
     ControlTitle->setFont(TitleFont);
@@ -363,8 +391,11 @@ void MotionControlWidget::Init(){
     ControlLayout->addWidget(ControlDataWidget);
 
     splitter_2->addWidget(ControlWidget);
+}
 
-//动力系统
+void MotionControlWidget::InitPropulsionSysWidget()
+{
+    //动力系统
     QLabel *PropulsionSysLabel = new QLabel(this);
     PropulsionSysLabel->setText("Propulsion System");
     PropulsionSysLabel->setFont(TitleFont);
@@ -405,31 +436,31 @@ void MotionControlWidget::Init(){
     ThrusterData4->setFont(ThrusterDataFont);
 
     //舵机名称标签和数据标签设置
-//    QLabel *Servo1 = new QLabel("Servo1",this);
-//    QLabel *Servo2 = new QLabel("Servo2",this);
-//    QLabel *Servo3 = new QLabel("Servo3",this);
-//    QLabel *Servo4 = new QLabel("Servo4",this);
+    //    QLabel *Servo1 = new QLabel("Servo1",this);
+    //    QLabel *Servo2 = new QLabel("Servo2",this);
+    //    QLabel *Servo3 = new QLabel("Servo3",this);
+    //    QLabel *Servo4 = new QLabel("Servo4",this);
 
-//    //设置字体和大小
-//    QFont ServoDataFont = QFont("Corbel", 15);
+    //    //设置字体和大小
+    //    QFont ServoDataFont = QFont("Corbel", 15);
 
-//    Servo1->setMinimumHeight(25);
-//    Servo1->setFont(ServoDataFont);
-//    Servo2->setMinimumHeight(25);
-//    Servo2->setFont(ServoDataFont);
-//    Servo3->setMinimumHeight(25);
-//    Servo3->setFont(ServoDataFont);
-//    Servo4->setMinimumHeight(25);
-//    Servo4->setFont(ServoDataFont);
+    //    Servo1->setMinimumHeight(25);
+    //    Servo1->setFont(ServoDataFont);
+    //    Servo2->setMinimumHeight(25);
+    //    Servo2->setFont(ServoDataFont);
+    //    Servo3->setMinimumHeight(25);
+    //    Servo3->setFont(ServoDataFont);
+    //    Servo4->setMinimumHeight(25);
+    //    Servo4->setFont(ServoDataFont);
 
-//    ServoData1->setMinimumSize(100,20);
-//    ServoData1->setFont(ServoDataFont);
-//    ServoData2->setMinimumSize(100,20);
-//    ServoData2->setFont(ServoDataFont);
-//    ServoData3->setMinimumSize(100,20);
-//    ServoData3->setFont(ServoDataFont);
-//    ServoData4->setMinimumSize(100,20);
-//    ServoData4->setFont(ServoDataFont);
+    //    ServoData1->setMinimumSize(100,20);
+    //    ServoData1->setFont(ServoDataFont);
+    //    ServoData2->setMinimumSize(100,20);
+    //    ServoData2->setFont(ServoDataFont);
+    //    ServoData3->setMinimumSize(100,20);
+    //    ServoData3->setFont(ServoDataFont);
+    //    ServoData4->setMinimumSize(100,20);
+    //    ServoData4->setFont(ServoDataFont);
 
     //将推进器相关的控件垂直布局
     QWidget *ThrusterDataWidget = new QWidget(this);
@@ -447,19 +478,19 @@ void MotionControlWidget::Init(){
     ThrusterDataLayout->addWidget(ThrusterData4);
 
     //将舵机相关的控件垂直布局
-//    QWidget *ServoDataWidget = new QWidget(this);
-//    QVBoxLayout *ServoDataLayout = new QVBoxLayout(this);
-//    ServoDataWidget->setLayout(ServoDataLayout);
-//    ServoDataLayout->setContentsMargins(0, 0, 0, 0);
-//    ServoDataLayout->setAlignment(Qt::AlignTop);
-//    ServoDataLayout->addWidget(Servo1);
-//    ServoDataLayout->addWidget(ServoData1);
-//    ServoDataLayout->addWidget(Servo2);
-//    ServoDataLayout->addWidget(ServoData2);
-//    ServoDataLayout->addWidget(Servo3);
-//    ServoDataLayout->addWidget(ServoData3);
-//    ServoDataLayout->addWidget(Servo4);
-//    ServoDataLayout->addWidget(ServoData4);
+    //    QWidget *ServoDataWidget = new QWidget(this);
+    //    QVBoxLayout *ServoDataLayout = new QVBoxLayout(this);
+    //    ServoDataWidget->setLayout(ServoDataLayout);
+    //    ServoDataLayout->setContentsMargins(0, 0, 0, 0);
+    //    ServoDataLayout->setAlignment(Qt::AlignTop);
+    //    ServoDataLayout->addWidget(Servo1);
+    //    ServoDataLayout->addWidget(ServoData1);
+    //    ServoDataLayout->addWidget(Servo2);
+    //    ServoDataLayout->addWidget(ServoData2);
+    //    ServoDataLayout->addWidget(Servo3);
+    //    ServoDataLayout->addWidget(ServoData3);
+    //    ServoDataLayout->addWidget(Servo4);
+    //    ServoDataLayout->addWidget(ServoData4);
 
     //将推进器和舵机的布局再进行水平布局
     QWidget *PropulsionSysDataWidget = new QWidget(this);
@@ -480,8 +511,11 @@ void MotionControlWidget::Init(){
     PropulsionSysLayout->addWidget(PropulsionSysDataWidget);
 
     splitter_3->addWidget(PropulsionSysWidget);
+}
 
-//串口LOG
+void MotionControlWidget::InitLogWidget()
+{
+    //串口LOG
     //log标签设置
     QLabel *logLabel = new QLabel(this);
     logLabel->setText("Log From Uart");
@@ -542,10 +576,11 @@ void MotionControlWidget::Init(){
     //垂直布局，将logWidget、BTNWidget摆放
     splitter_3->addWidget(logWidget);
     splitter_3->addWidget(BTNWidget);
+}
 
-//3d模型
-
-//info 显示深度、GPS、电量百分比
+void MotionControlWidget::InitInfoWidget()
+{
+    //info 显示深度、GPS、电量百分比
     infoTitle = new QLabel(this);
     infoTitle->setText("INFO");
     infoTitle->setFont(TitleFont);
@@ -609,20 +644,6 @@ void MotionControlWidget::Init(){
     infoLayout->addWidget(JoystickButtonDataInfo);
 
     splitter_4->addWidget(infoWidget);
-
-    splitter_1->setStretchFactor(0,2);
-    splitter_1->setStretchFactor(1,7);
-    splitter_1->setStretchFactor(2,2);
-
-    splitter_2->setStretchFactor(0,1);
-    splitter_2->setStretchFactor(1,1);
-
-    splitter_3->setStretchFactor(0,5);
-    splitter_3->setStretchFactor(1,1);
-
-    splitter_4->setStretchFactor(0,1);
-    splitter_4->setStretchFactor(1,2);
-
 }
 
 void MotionControlWidget::keyPressEvent(QKeyEvent *event)
@@ -684,6 +705,7 @@ void MotionControlWidget::slotLogDataDisplay(QString serialBuf)
         logPTE->ensureCursorVisible();
         logPTE->insertPlainText(serialBuf);
     }
+    LOG_INFO((char*)"串口数据显示");
 }
 
 void MotionControlWidget::slotAngleDataDisplay(QStringList ProcessedData)
@@ -693,6 +715,7 @@ void MotionControlWidget::slotAngleDataDisplay(QStringList ProcessedData)
         AttitudeDataInfo->setText(QString("Roll%1    Pitch%2    Yaw%3")
                                  .arg(ProcessedData.at(2),ProcessedData.at(3),ProcessedData.at(4)));    //Roll Pitch Yaw
     }
+    LOG_INFO((char*)"姿态数据显示");
 }
 
 void MotionControlWidget::slotDepthDataDisplay(QStringList ProcessedData)
@@ -701,6 +724,7 @@ void MotionControlWidget::slotDepthDataDisplay(QStringList ProcessedData)
     {
 
     }
+    LOG_INFO((char*)"深度数据显示");
 }
 
 void MotionControlWidget::slotThrusterDataDisplay(QStringList ProcessedData, int ThrusterNum)
@@ -729,6 +753,7 @@ void MotionControlWidget::slotThrusterDataDisplay(QStringList ProcessedData, int
             break;
         }
     }
+    LOG_INFO((char*)"推进器数据显示");
 }
 
 

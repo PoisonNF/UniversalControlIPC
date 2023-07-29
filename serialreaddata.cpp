@@ -16,12 +16,10 @@ void SerialReadData::SRDworking()
     if(!serialBuf.isEmpty())
     {
         qDebug() << serialBuf;
-        QStringList ProcessedData = serialBuf.split(u' ');
-        qDebug() << ProcessedData;
-
+        LOG_INFO((char *)"串口收到数据%s",QString(serialBuf).toStdString().c_str());
         //发射信号给datadisplay窗口
         emit sigLogDataDisplay(serialBuf);
         //发射信号给数据分拣线程
-        emit sigDataSort(ProcessedData);
+        emit sigDataSort(serialBuf);
     }
 }

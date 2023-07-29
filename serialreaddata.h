@@ -5,6 +5,7 @@
 #include <QThread>
 #include <QSerialPort>
 #include <QDebug>
+#include "./log/log.h"
 
 class SerialReadData : public QObject
 {
@@ -19,7 +20,7 @@ private:
 
 signals:
     void sigLogDataDisplay(QString serialBuf);
-    void sigDataSort(QStringList ProcessedData);
+    void sigDataSort(QString serialBuf);
 };
 
 #endif // SERIALREADDATA_H

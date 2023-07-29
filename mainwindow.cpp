@@ -32,14 +32,15 @@ MainWindow::MainWindow(QWidget *parent)
 
 /* 初始化 */
 void MainWindow::Init(){
-
-    InitFrame();    //框架初始化
-    InitDefaultPage();  //默认主界面初始化
-    InitDefaultSettingsPage(); //默认设置界面初始化
-    InitLayersPage();   //层页界面和按钮初始化
+    InitLog();                  //日志初始化
+    InitFrame();                //框架初始化
+    InitDefaultPage();          //默认主界面初始化
+    InitDefaultSettingsPage();  //默认设置界面初始化
+    InitLayersPage();           //层页界面和按钮初始化
     InitDataDisplayWidget();    //数据显示界面初始化
     InitMotionControlWidget();  //运动控制界面初始化
-    InitSerialPage();   //串口设置界面初始化
+    InitSerialPage();           //串口设置界面初始化
+
 }
 
 /* 框架初始化 */
@@ -479,6 +480,11 @@ void MainWindow::InitMotionControlWidget()
     motionControlWidget->hide();
     motionControlWidget->settingPage()->setParent(ui->mainWidget);
     pageList.push_back(motionControlWidget->settingPage());
+}
+
+void MainWindow::InitLog()
+{
+    m_pLog = LOG::getInstance();
 }
 
 /* 切换到数据显示窗口 */

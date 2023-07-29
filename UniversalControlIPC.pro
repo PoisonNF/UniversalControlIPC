@@ -20,6 +20,7 @@ SOURCES += \
     frame/slidedialog.cpp \
     frame/slidepage.cpp \
     joysticks.cpp \
+    log/log.cpp \
     main.cpp \
     mainwindow.cpp \
     motioncontrolwidget.cpp \
@@ -35,6 +36,7 @@ HEADERS += \
     frame/slidedialog.h \
     frame/slidepage.h \
     joysticks.h \
+    log/log.h \
     mainwindow.h \
     motioncontrolwidget.h \
     serialdataanalyze.h \

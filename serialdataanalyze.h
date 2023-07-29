@@ -5,6 +5,7 @@
 #include <QThread>
 #include <QSerialPort>
 #include <QDebug>
+#include "./Log/log.h"
 
 class SerialDataAnalyze : public QObject
 {
@@ -12,7 +13,7 @@ class SerialDataAnalyze : public QObject
 public:
     explicit SerialDataAnalyze(QObject *parent = nullptr);
 
-    void SDAworking(QStringList ProcessedData);
+    void SDAworking(QString serialBuf);
 private:
     QStringList m_ProcessedData;    //临时存放数据
 

@@ -15,6 +15,7 @@
 #include "motioncontrolwidget.h"
 #include "serialreaddata.h"
 #include "serialdataanalyze.h"
+#include "./log/log.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -25,6 +26,8 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 private:
     int cornerRadius = 20;
+
+    LOG *m_pLog;
 
     QWidget *border = nullptr;  //边界
     QWidget *defaultPage;       //主界面除标题之外
@@ -80,6 +83,7 @@ private:
     void InitSerialPage();  //串口设置界面初始化
     void InitDataDisplayWidget();   //初始化数据显示窗口
     void InitMotionControlWidget(); //初始化运动控制窗口
+    void InitLog();   //log初始化
 
     //模式枚举类型
     enum MODE{DATADISPLAY = 1, MOTIONCONTROl = 2};

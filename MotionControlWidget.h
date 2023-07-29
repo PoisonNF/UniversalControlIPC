@@ -22,6 +22,7 @@
 #include "./frame/customWidgets.h"
 #include "QJoysticks.h"
 #include "joysticks.h"
+#include "./Log/log.h"
 
 #if (QT_VERSION > QT_VERSION_CHECK(6,3,0))
 #include <QFileDialog>
@@ -37,6 +38,9 @@ private:
     Qt3DCore::QEntity *mRootEntity;
     Qt3DCore::QEntity *lightEntity;
     Qt3DRender::QPointLight *light;
+
+    QSizePolicy sizepolicy;
+    QFont TitleFont = QFont("Corbel", 20);
 
     QVBoxLayout *mainLayout;
     QSplitter *splitter_1;
@@ -95,9 +99,17 @@ private:
     Joysticks *JSwork;
 
     void Init();
+    void InitJoysticks();           //初始化手柄
+    void InitLayout();              //初始化总体布局
+    void InitPIDWidget();           //初始化PID窗口
+    void InitControlWidget();       //初始化控制窗口
+    void InitPropulsionSysWidget(); //初始化动力系统窗口
+    void InitLogWidget();           //初始化串口log窗口
+    void InitInfoWidget();          //初始化信息窗口
+
+
     void SaveToFile(const QString &path);
     void ModeSelectPage(int r); //模式选择页
-    void JoysticksInit();       //手柄初始化
 
     void keyPressEvent(QKeyEvent *event);   //重写键盘按下事件
 

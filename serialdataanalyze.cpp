@@ -7,9 +7,11 @@ SerialDataAnalyze::SerialDataAnalyze(QObject *parent)
 }
 
 //数据分析线程任务函数
-void SerialDataAnalyze::SDAworking(QStringList ProcessedData)
+void SerialDataAnalyze::SDAworking(QString serialBuf)
 {
-    m_ProcessedData = ProcessedData;    //暂存数据
+    QStringList m_ProcessedData = serialBuf.split(u' ');
+    //qDebug() << m_ProcessedData;
+    LOG_INFO((char*)"开始分析数据%s",QString(serialBuf).toStdString().c_str());
 
     //JY901S的数据
     if(m_ProcessedData.count() > 0 && m_ProcessedData.at(0) == "J")
@@ -18,13 +20,15 @@ void SerialDataAnalyze::SDAworking(QStringList ProcessedData)
         if(m_ProcessedData.at(1) == "Angle")
         {
             emit sigAngleDataAnalyze(m_ProcessedData);
-            qDebug() << "AngleData";
+            //qDebug() << "AngleData";
+            LOG_INFO((char*)"结果：姿态数据");
         }
     }
 
     //推进器的数据
     if(m_ProcessedData.at(0) == "T")
     {
+        LOG_INFO((char*)"结果：推进器数据");
         if(m_ProcessedData.at(1) == "1")
         {
             emit sigThrusterDataAnalyze(m_ProcessedData,1);
