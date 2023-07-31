@@ -60,6 +60,7 @@ void MotionControlWidget::Init(){
     InitControlWidget();        //初始化控制窗口
     InitPropulsionSysWidget();  //初始化动力系统窗口
     InitLogWidget();            //初始化串口log窗口
+    InitYOLOLogWidget();        //初始化YOLO串口log窗口
     InitInfoWidget();           //初始化信息窗口
 }
 
@@ -109,6 +110,12 @@ void MotionControlWidget::InitJoysticks()
 
         emit sigJoyButtonSend(str);
         JoystickButtonDataInfo->setText(str);
+    });
+
+    connect(JSwork,&Joysticks::destroyed,this,[=](){
+        JSThread->quit();
+        JSThread->wait();
+        JSThread->deleteLater();
     });
 
     //connect(m_joystick, SIGNAL(axisChanged(int, int, qreal)), this, SLOT(joysitck_axis(int, int, qreal)));
@@ -179,9 +186,61 @@ void MotionControlWidget::InitPIDWidget()
     PIDSplitter->setFixedSize(30, 6);
     PIDSplitter->setStyleSheet("background-color:#3c3c3c;border-radius:3px;");
 
+    //选项框设置
+    PIDComboBox->setMaximumWidth(100);
+    PIDComboBox->insertItems(0,QStringList("深度环"));
+    PIDComboBox->insertItems(1,QStringList("艏向环"));
+    PIDComboBox->setFont(QFont("Corbel", 12));
+
+    QString sheet = "\
+            QComboBox {\
+                border: 1px solid gray; \
+                border-radius: 3px;\
+                padding: 1px 18px 1px 3px; \
+                color: #000;\
+                font: normal normal 15px Microsoft YaHei;\
+                background: transparent;\
+            }\
+            QComboBox QAbstractItemView {\
+                font-family: Microsoft YaHei;\
+                font-size: 15px;\
+                border:1px solid rgba(0,0,0,10%);\
+                border-radius: 3px;\
+                padding:5px;\
+                background-color: #FFFFFF;\
+            }\
+            ";
+
+    PIDComboBox->setView(new QListView());
+    PIDComboBox->setStyleSheet(sheet);
+
+    DepthPIDstore.P = 0;
+    DepthPIDstore.I = 0;
+    DepthPIDstore.D = 0;
+
+    YawPIDstore.P = 0;
+    YawPIDstore.I = 0;
+    YawPIDstore.D = 0;
+
+    connect(PIDComboBox,&QComboBox::currentIndexChanged,this,[=](){
+        qDebug() << PIDComboBox->currentIndex() <<PIDComboBox->currentText();
+        if(PIDComboBox->currentIndex() == DepthPID)         //深度环
+        {
+            CurrPID_P->setText(QString("DepthPID P:              %1").arg(DepthPIDstore.P));
+            CurrPID_I->setText(QString("DepthPID I:              %1").arg(DepthPIDstore.I));
+            CurrPID_D->setText(QString("DepthPID D:              %1").arg(DepthPIDstore.D));
+        }
+        else if(PIDComboBox->currentIndex() == YawPID)     //艏向环
+        {
+            CurrPID_P->setText(QString("YawPID P:              %1").arg(YawPIDstore.P));
+            CurrPID_I->setText(QString("YawPID I:              %1").arg(YawPIDstore.I));
+            CurrPID_D->setText(QString("YawPID D:              %1").arg(YawPIDstore.D));
+        }
+    });
+
     //设置字体和大小
     QFont PIDTitleFont = QFont("Corbel", 18);
-    QFont PIDDataFont = QFont("Arial",15);
+    QFont PIDDataFont = QFont("Corbel", 12);
 
     //当前PID值标签
     QLabel *CurrentPID = new QLabel("Current PID",this);
@@ -229,22 +288,42 @@ void MotionControlWidget::InitPIDWidget()
     //连接函数，按下按钮时，发送信号给主窗口，将PID值从串口发出。同时设置当前PID值的标签
     connect(SetPIDBTN,&textButton::clicked,this,[=](){
 
-        emit SetPIDSignal();    //发射信号
-
         //保存PID值为现PID值
-        CurrPID_P->setText(QString("P:              %1").arg(PID_P_TII->value()));
-        CurrPID_I->setText(QString("I:              %1").arg(PID_I_TII->value()));
-        CurrPID_D->setText(QString("D:              %1").arg(PID_D_TII->value()));
+        if(PIDComboBox->currentIndex() == DepthPID)
+        {
+            CurrPID_P->setText(QString("DepthPID P:              %1").arg(PID_P_TII->value()));
+            CurrPID_I->setText(QString("DepthPID I:              %1").arg(PID_I_TII->value()));
+            CurrPID_D->setText(QString("DepthPID D:              %1").arg(PID_D_TII->value()));
+
+            DepthPIDstore.P = QString(PID_P_TII->value()).toDouble();
+            DepthPIDstore.I = QString(PID_I_TII->value()).toDouble();
+            DepthPIDstore.D = QString(PID_D_TII->value()).toDouble();
+
+            emit sigSendPIDSignal(DepthPIDstore,DepthPID);    //发射设置深度环PID信号
+        }
+        else if(PIDComboBox->currentIndex() == YawPID)
+        {
+            CurrPID_P->setText(QString("YawPID P:              %1").arg(PID_P_TII->value()));
+            CurrPID_I->setText(QString("YawPID I:              %1").arg(PID_I_TII->value()));
+            CurrPID_D->setText(QString("YawPID D:              %1").arg(PID_D_TII->value()));
+
+            YawPIDstore.P = QString(PID_P_TII->value()).toDouble();
+            YawPIDstore.I = QString(PID_I_TII->value()).toDouble();
+            YawPIDstore.D = QString(PID_D_TII->value()).toDouble();
+
+            emit sigSendPIDSignal(YawPIDstore,YawPID);       //发射设置艏向环PID信号
+        }
     });
 
     QWidget *PIDDataWidget = new QWidget(this);
     PIDDataWidget->setSizePolicy(sizepolicy);
     //设置最小大小
-    PIDDataWidget->setMinimumSize(450,300);
+    PIDDataWidget->setMinimumSize(410,0);
     QVBoxLayout *PIDDataLayout = new QVBoxLayout(this);
     PIDDataWidget->setLayout(PIDDataLayout);
     PIDDataLayout->setContentsMargins(0, 0, 0, 0);
     PIDDataLayout->setAlignment(Qt::AlignTop);
+    PIDDataLayout->addWidget(PIDComboBox);
     PIDDataLayout->addWidget(CurrentPID);
     PIDDataLayout->addWidget(CurrPID_P);
     PIDDataLayout->addWidget(CurrPID_I);
@@ -303,37 +382,37 @@ void MotionControlWidget::InitControlWidget()
     {
         ControlData->setText("Key W Press");
         ControlState->setText("Forward");
-        emit SendControlSignal("W");
+        emit sigSendControlSignal("W");
     });
     connect(AIcon,&customIcon::clicked,this,[=]()
     {
         ControlData->setText("Key A Press");
         ControlState->setText("Left");
-        emit SendControlSignal("A");
+        emit sigSendControlSignal("A");
     });
     connect(SIcon,&customIcon::clicked,this,[=]()
     {
         ControlData->setText("Key S Press");
         ControlState->setText("Draw back");
-        emit SendControlSignal("S");
+        emit sigSendControlSignal("S");
     });
     connect(DIcon,&customIcon::clicked,this,[=]()
     {
         ControlData->setText("Key D Press");
         ControlState->setText("Right");
-        emit SendControlSignal("D");
+        emit sigSendControlSignal("D");
     });
     connect(QIcon,&customIcon::clicked,this,[=]()
     {
         ControlData->setText("Key Q Press");
         ControlState->setText("Float");
-        emit SendControlSignal("Q");
+        emit sigSendControlSignal("Q");
     });
     connect(EIcon,&customIcon::clicked,this,[=]()
     {
         ControlData->setText("Key E Press");
         ControlState->setText("Sink");
-        emit SendControlSignal("E");
+        emit sigSendControlSignal("E");
     });
 
     //第一排按键水平布局
@@ -369,7 +448,7 @@ void MotionControlWidget::InitControlWidget()
 
     QWidget *ControlDataWidget = new QWidget(this);
     ControlDataWidget->setSizePolicy(sizepolicy);
-    ControlDataWidget->setMinimumSize(450,300);
+    ControlDataWidget->setMinimumSize(410,0);
     QVBoxLayout *ControlDataLayout = new QVBoxLayout(this);
     ControlDataWidget->setLayout(ControlDataLayout);
     ControlDataLayout->setContentsMargins(0, 0, 0, 0);
@@ -578,6 +657,59 @@ void MotionControlWidget::InitLogWidget()
     splitter_3->addWidget(BTNWidget);
 }
 
+void MotionControlWidget::InitYOLOLogWidget()
+{
+    //串口LOG
+    //log标签设置
+    QLabel *logLabel = new QLabel(this);
+    logLabel->setText("YOLO");
+    logLabel->setFont(TitleFont);
+    logLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    logLabel->setStyleSheet("color:#2c2c2c");
+
+    //小横条设置
+    QWidget *logSplitter = new QWidget(this);
+    logSplitter->setFixedSize(30, 6);
+    logSplitter->setStyleSheet("background-color:#3c3c3c;border-radius:3px;");
+
+    //log框设置，包含PTE和LE，使用垂直布局
+    //用于显示接收串口传过来的数据
+    QFont logPTEFont = QFont("Arial",10);
+    YOLOlogPTE = new QPlainTextEdit;
+    YOLOlogPTE->setReadOnly(true);
+    YOLOlogPTE->setMinimumSize(300,185);
+    YOLOlogPTE->setFont(logPTEFont);
+    YOLOlogPTE->setStyleSheet("background-color: black; color: black;border-radius:3px; background-color: #00000000; border: 1px solid darkgray;");
+
+    QWidget *YOLOlogWidget = new QWidget(this);
+    QVBoxLayout *logLayout = new QVBoxLayout(this); //垂直布局
+    YOLOlogWidget->setLayout(logLayout);
+    YOLOlogWidget->setContentsMargins(0, 0, 0, 0);
+    logLayout->setAlignment(Qt::AlignTop);
+    logLayout->addWidget(logLabel);
+    logLayout->addWidget(logSplitter);
+    logLayout->addWidget(YOLOlogPTE);
+
+    //底下按钮的设置，使用水平布局
+    textButton *ClearBTN = new textButton("Clear",this);
+
+    //按下清屏键，清除接收框和发送框所有的数据
+    connect(ClearBTN,&textButton::clicked,this,[=]()
+    {
+        YOLOlogPTE->clear();
+        qDebug() << "Clear complete";
+    });
+
+    QWidget *BTNWidget = new QWidget(this);
+    QHBoxLayout *BTNLayout = new QHBoxLayout(this); //水平布局
+    BTNWidget->setLayout(BTNLayout);
+    BTNLayout->addWidget(ClearBTN);
+
+    //垂直布局，将logWidget、BTNWidget摆放
+    splitter_4->addWidget(YOLOlogWidget);
+    splitter_4->addWidget(BTNWidget);
+}
+
 void MotionControlWidget::InitInfoWidget()
 {
     //info 显示深度、GPS、电量百分比
@@ -654,42 +786,42 @@ void MotionControlWidget::keyPressEvent(QKeyEvent *event)
         qDebug() << CurrentKey << "被按下";
         ControlData->setText("Key W Press");
         ControlState->setText("Forward");
-        emit SendControlSignal("W");
+        emit sigSendControlSignal("W");
         break;
     case Qt::Key_A: //A键被按下
         CurrentKey = Qt::Key_A;
         qDebug() << CurrentKey << "被按下";
         ControlData->setText("Key A Press");
         ControlState->setText("Left");
-        emit SendControlSignal("A");
+        emit sigSendControlSignal("A");
         break;
     case Qt::Key_S: //S键被按下
         CurrentKey = Qt::Key_S;
         qDebug() << CurrentKey << "被按下";
         ControlData->setText("Key S Press");
         ControlState->setText("Draw back");
-        emit SendControlSignal("S");
+        emit sigSendControlSignal("S");
         break;
     case Qt::Key_D: //D键被按下        
         CurrentKey = Qt::Key_D;
         qDebug() << CurrentKey << "被按下";
         ControlData->setText("Key D Press");
         ControlState->setText("Right");
-        emit SendControlSignal("D");
+        emit sigSendControlSignal("D");
         break;
     case Qt::Key_Q: //Q键被按下
         CurrentKey = Qt::Key_Q;
         qDebug() << CurrentKey << "被按下";
         ControlData->setText("Key Q Press");
         ControlState->setText("Float");
-        emit SendControlSignal("Q");
+        emit sigSendControlSignal("Q");
         break;
     case Qt::Key_E: //E键被按下
         CurrentKey = Qt::Key_E;
         qDebug() << CurrentKey << "被按下";
         ControlData->setText("Key E Press");
         ControlState->setText("Sink");
-        emit SendControlSignal("E");
+        emit sigSendControlSignal("E");
         break;
     default:
         QWidget::keyPressEvent(event);   //必须调用父类函数
@@ -706,6 +838,16 @@ void MotionControlWidget::slotLogDataDisplay(QString serialBuf)
         logPTE->insertPlainText(serialBuf);
     }
     LOG_INFO((char*)"串口数据显示");
+}
+
+void MotionControlWidget::slotYOLOLogDataDisplay(QString serialBuf)
+{
+    if(!this->isHidden())
+    {
+        YOLOlogPTE->ensureCursorVisible();
+        YOLOlogPTE->insertPlainText(serialBuf);
+    }
+    LOG_INFO((char*)"YOLO串口数据显示");
 }
 
 void MotionControlWidget::slotAngleDataDisplay(QStringList ProcessedData)

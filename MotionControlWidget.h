@@ -17,6 +17,8 @@
 #include <QGuiApplication>
 #include <QPlainTextEdit>
 #include <QMessageBox>
+#include <QComboBox>
+#include <QListView>
 
 #include "./frame/slidepage.h"
 #include "./frame/customWidgets.h"
@@ -48,15 +50,37 @@ private:
     QSplitter *splitter_3;
     QSplitter *splitter_4;
 
+    //PID
     QLabel *PIDTitle;
     QLabel *ControlTitle;
     QLabel *logTitle;
     QLabel *infoTitle;
 
+    QComboBox *PIDComboBox = new QComboBox(this);
+
+public:
+    typedef struct
+    {
+        double P;
+        double I;
+        double D;
+    }CurrPIDstore;  //存储不同PID环中的PID数值
+
+    typedef enum
+    {
+        DepthPID,
+        YawPID,
+    }PIDtype;
+
+private:
+    CurrPIDstore DepthPIDstore; //储存深度环PID
+    CurrPIDstore YawPIDstore;   //储存艏向环PID
+
     QLabel *CurrPID_P = new QLabel("P:              0",this);   //当前P值显示标签
     QLabel *CurrPID_I = new QLabel("I:              0",this);   //当前I值显示标签
     QLabel *CurrPID_D = new QLabel("D:              0",this);   //当前D值显示标签
 
+    //control
     customIcon *WIcon = nullptr;    //按键W图标
     customIcon *AIcon = nullptr;    //按键A图标
     customIcon *SIcon = nullptr;    //按键S图标
@@ -67,6 +91,7 @@ private:
     QLabel *ControlData = new QLabel(this);   //当前控制情况标签
     QLabel *ControlState = new QLabel(this);    //当前控制状态标签
 
+    //PropulsionSys
     QLabel *ThrusterData1 = new QLabel(this);   //1号推进器的数据
     QLabel *ThrusterData2 = new QLabel(this);   //2号推进器的数据
     QLabel *ThrusterData3 = new QLabel(this);   //3号推进器的数据
@@ -77,6 +102,7 @@ private:
     QLabel *ServoData3 = new QLabel(this);  //3号舵机的数据
     QLabel *ServoData4 = new QLabel(this);  //4号舵机的数据
 
+    //Info
     QLabel *AttitudeDataInfo = new QLabel(this);    //Info姿态数据
     QLabel *DepthDataInfo = new QLabel(this);       //Info深度数据
     QLabel *JoystickAxisDataInfo = new QLabel(this);        //Info手柄坐标数据
@@ -89,9 +115,11 @@ private:
     QWidget *ControlWidget = nullptr;
     QWidget *PropulsionSysWidget = nullptr;
     QWidget *logWidget = nullptr;
+    QWidget *YOLOlogWidget = nullptr;
     QWidget *infoWidget = nullptr;
 
     QPlainTextEdit *logPTE; //串口数据显示框
+    QPlainTextEdit *YOLOlogPTE; //YOLO串口数据显示框
 
     Qt::Key CurrentKey; //当前按下按键的键值
 
@@ -105,6 +133,7 @@ private:
     void InitControlWidget();       //初始化控制窗口
     void InitPropulsionSysWidget(); //初始化动力系统窗口
     void InitLogWidget();           //初始化串口log窗口
+    void InitYOLOLogWidget();       //初始化YOLO串口log窗口
     void InitInfoWidget();          //初始化信息窗口
 
 
@@ -117,14 +146,6 @@ public:
     explicit MotionControlWidget(int radius, QWidget *parent = nullptr);
 
     SlidePage *settingPage(){return settings;}
-    Qt3DRender::QPointLight *Light(){return light;}
-
-    Qt3DExtras::Qt3DWindow *view;
-    QWidget *container = nullptr;
-
-    textButton *SendBTN;        //串口发送按钮
-    textButton *ClearBTN;       //串口清空按钮
-    textInputItem *logTII;      //串口发送栏
 
     textInputItem *PID_P_TII;   //PID P值输入框
     textInputItem *PID_I_TII;   //PID I值输入框
@@ -132,16 +153,21 @@ public:
 
     textButton *SetPIDBTN;  //设置PID值按钮
 
+    textButton *SendBTN;        //串口发送按钮
+    textButton *ClearBTN;       //串口清空按钮
+    textInputItem *logTII;      //串口发送栏
+
 signals:
     void sigLogDataSend();  //发送数据信号往主窗口
     //void AttitudeChange(QString pitch, QString yaw, QString roll);
-    void SetPIDSignal();   //设置PID信号往主窗口
-    void SendControlSignal(QString str);  //发送控制信号往主窗口
+    void sigSendPIDSignal(MotionControlWidget::CurrPIDstore PIDstore,MotionControlWidget::PIDtype PIDtype);   //设置PID信号往主窗口
+    void sigSendControlSignal(QString str);  //发送控制信号往主窗口
     void sigJoyAxisSend(QString str);     //发送手柄坐标数据往主窗口
     void sigJoyButtonSend(QString str);   //发送手柄按键数据往主窗口
 
 public slots:
     void slotLogDataDisplay(QString serialBuf);
+    void slotYOLOLogDataDisplay(QString serialBuf);
     void slotAngleDataDisplay(QStringList ProcessedData);
     void slotDepthDataDisplay(QStringList ProcessedData);
     void slotThrusterDataDisplay(QStringList ProcessedData,int ThrusterNum);

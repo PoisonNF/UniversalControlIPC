@@ -25,7 +25,8 @@ SOURCES += \
     mainwindow.cpp \
     motioncontrolwidget.cpp \
     serialdataanalyze.cpp \
-    serialreaddata.cpp
+    serialreaddata.cpp \
+    yoloserialreaddata.cpp
 
 HEADERS += \
     datadisplaywidget.h \
@@ -40,7 +41,8 @@ HEADERS += \
     mainwindow.h \
     motioncontrolwidget.h \
     serialdataanalyze.h \
-    serialreaddata.h
+    serialreaddata.h \
+    yoloserialreaddata.h
 
 FORMS += \
     mainwindow.ui

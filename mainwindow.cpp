@@ -40,6 +40,7 @@ void MainWindow::Init(){
     InitDataDisplayWidget();    //数据显示界面初始化
     InitMotionControlWidget();  //运动控制界面初始化
     InitSerialPage();           //串口设置界面初始化
+    InitSerialYOLOPage();       //串口YOLO设置界面初始化
 
 }
 
@@ -288,12 +289,9 @@ void MainWindow::InitSerialPage()
 {
     //串口配置按钮 还有个 空出的按钮
     textButton *serialBtn = new textButton("串口配置", ui->titleBar,1.2);
-    serialBtn->setMinimumWidth(50);
-    textButton *internetBtn = new textButton("", ui->titleBar,1.2);
-    internetBtn->setMinimumWidth(50);
+    serialBtn->setMinimumWidth(100);
 
     ui->horizontalLayout->insertWidget(1,serialBtn);
-    ui->horizontalLayout->insertWidget(2,internetBtn);
 
     serial = new QSerialPort;
     serialDialog = new SlideDialog(cornerRadius,"串口配置",ui->mainWidget);
@@ -434,22 +432,32 @@ void MainWindow::InitSerialPage()
     });
 
     //接收到按键或者鼠标点击发送信号，往串口中写入信号携带的数据
-    connect(motionControlWidget,&MotionControlWidget::SendControlSignal,this,[=](QString str)
+    connect(motionControlWidget,&MotionControlWidget::sigSendControlSignal,this,[=](QString str)
     {
         qDebug() << "获取控制信号，串口开始发送" << str;
         serial->write(QString("C " + str + "\r\n").toLocal8Bit().data());
     });
 
     //接收到PID设置信号，往串口中写入PID值
-    connect(motionControlWidget,&MotionControlWidget::SetPIDSignal,this,[=](){
+    connect(motionControlWidget,&MotionControlWidget::sigSendPIDSignal,
+            this,[=](MotionControlWidget::CurrPIDstore PIDstore,MotionControlWidget::PIDtype PIDtype)
+    {
         qDebug() << "设置PID值";
-        //根据协议传输PID值 形如PID X X X
+        //根据协议传输PID值 形如PID Depth X X X
         QString PIDValue;
-        PIDValue = "PID "
-                 + QString(motionControlWidget->PID_P_TII->value()) + " "
-                 + QString(motionControlWidget->PID_I_TII->value()) + " "
-                 + QString(motionControlWidget->PID_D_TII->value()) + "\r\n";
+
+        if(PIDtype == MotionControlWidget::DepthPID)
+            PIDValue = "PID DepthPID "
+                     + QString::number(PIDstore.P) + " "
+                     + QString::number(PIDstore.I) + " "
+                     + QString::number(PIDstore.D) + "\r\n";
+        else if(PIDtype == MotionControlWidget::YawPID)
+            PIDValue = "PID YawPID "
+                     + QString::number(PIDstore.P) + " "
+                     + QString::number(PIDstore.I) + " "
+                     + QString::number(PIDstore.D) + "\r\n";
         qDebug() << PIDValue;
+        LOG_INFO((char*)"设置PID值为%s",PIDValue.toStdString().c_str());
         serial->write(PIDValue.toLocal8Bit().data());
     });
 
@@ -461,6 +469,132 @@ void MainWindow::InitSerialPage()
     connect(motionControlWidget,&MotionControlWidget::sigJoyButtonSend,this,[=](QString str){
         serial->write(str.toLocal8Bit().data());
     });
+}
+
+void MainWindow::InitSerialYOLOPage()
+{
+    //串口配置按钮 还有个 空出的按钮
+    textButton *serialYOLOBtn = new textButton("YOLO配置", ui->titleBar,1.2);
+    serialYOLOBtn->setMinimumWidth(100);
+
+    ui->horizontalLayout->insertWidget(2,serialYOLOBtn);
+
+    serialYOLO = new QSerialPort;
+    serialYOLODialog = new SlideDialog(cornerRadius,"YOLO串口配置",ui->mainWidget);
+
+    QWidget *serialSetWidget = new QWidget(serialDialog);
+    serialSetWidget->setMinimumHeight(200);
+    //创建布局器
+    QGridLayout *serialSetWidgetLayout = new QGridLayout(serialSetWidget);
+    //布局器与QWidget之间的边际四周都为20
+    serialSetWidgetLayout->setContentsMargins(20, 20, 20, 20);
+    //设置指定列的伸缩因子 第一个参数为列，第二个参数为伸缩比例
+    serialSetWidgetLayout->setColumnStretch(0,1);
+    serialSetWidgetLayout->setColumnStretch(1,2);
+    serialSetWidgetLayout->setColumnStretch(2,2);
+    serialSetWidget->setLayout(serialSetWidgetLayout);
+
+    QLabel *comPortLabel = new QLabel("串口号", serialSetWidget);
+    QLabel *baudrateLabel = new QLabel("波特率", serialSetWidget);
+    QLabel *dataBitsLabel = new QLabel("数据位", serialSetWidget);
+    QLabel *checkBitsLabel = new QLabel("校验位", serialSetWidget);
+    QLabel *stopBitsLabel = new QLabel("停止位", serialSetWidget);
+    QLabel *flowCtlLabel = new QLabel("流控制", serialSetWidget);
+
+    comPortLabel->setContentsMargins(0, 0, 18, 0);
+    baudrateLabel->setContentsMargins(0, 0, 18, 0);
+    dataBitsLabel->setContentsMargins(0, 0, 18, 0);
+    checkBitsLabel->setContentsMargins(0, 0, 18, 0);
+    stopBitsLabel->setContentsMargins(0, 0, 18, 0);
+    flowCtlLabel->setContentsMargins(0, 0, 18, 0);
+
+    YOLOcomPortCBox = new QComboBox(serialSetWidget);
+    YOLObaudrateCBox = new QComboBox(serialSetWidget);
+    YOLOdataBitsCBox = new QComboBox(serialSetWidget);
+    YOLOcheckBitsCBox = new QComboBox(serialSetWidget);
+    YOLOstopBitsCBox = new QComboBox(serialSetWidget);
+    YOLOflowCtlCBox = new QComboBox(serialSetWidget);
+
+    openSerialYOLOBtn = new textButton("打开串口", serialSetWidget);
+    closeSerialYOLOBtn = new textButton("关闭串口", serialSetWidget);
+
+    foreach(qint32 baud, QSerialPortInfo::standardBaudRates())
+        YOLObaudrateCBox->addItem(QString::number(baud));
+    YOLObaudrateCBox->setCurrentText("115200");
+    serialYOLO->setBaudRate(YOLObaudrateCBox->currentText().toInt());
+
+    YOLOdataBitsCBox->addItem(QString::number(5));
+    YOLOdataBitsCBox->addItem(QString::number(6));
+    YOLOdataBitsCBox->addItem(QString::number(7));
+    YOLOdataBitsCBox->addItem(QString::number(8));
+    YOLOdataBitsCBox->setCurrentText("8");
+    serialYOLO->setDataBits(QSerialPort::DataBits(YOLOdataBitsCBox->currentText().toInt()));
+
+    YOLOcheckBitsCBox->addItem("NoParity");
+    YOLOcheckBitsCBox->addItem("EvenParity");
+    YOLOcheckBitsCBox->addItem("OddParity");
+    YOLOcheckBitsCBox->setCurrentText("NoParity");
+    serialYOLO->setParity(QSerialPort::NoParity);
+
+    YOLOstopBitsCBox->addItem(QString::number(1));
+    YOLOstopBitsCBox->addItem(QString::number(1.5));
+    YOLOstopBitsCBox->addItem(QString::number(2));
+    YOLOstopBitsCBox->setCurrentText("1");
+    serialYOLO->setStopBits(QSerialPort::OneStop);
+
+    YOLOflowCtlCBox->addItem("NoFlowControl");
+    YOLOflowCtlCBox->addItem("FlowControl");
+    YOLOflowCtlCBox->setCurrentText("NoFlowControl");
+    serialYOLO->setFlowControl(QSerialPort::NoFlowControl);
+
+    serialSetWidgetLayout->addWidget(comPortLabel, 0, 0, Qt::AlignRight);
+    serialSetWidgetLayout->addWidget(baudrateLabel, 1, 0, Qt::AlignRight);
+    serialSetWidgetLayout->addWidget(dataBitsLabel, 2, 0, Qt::AlignRight);
+    serialSetWidgetLayout->addWidget(checkBitsLabel, 3, 0, Qt::AlignRight);
+    serialSetWidgetLayout->addWidget(stopBitsLabel, 4, 0, Qt::AlignRight);
+    serialSetWidgetLayout->addWidget(flowCtlLabel, 5, 0, Qt::AlignRight);
+
+    serialSetWidgetLayout->addWidget(YOLOcomPortCBox, 0, 1);
+    serialSetWidgetLayout->addWidget(YOLObaudrateCBox, 1, 1);
+    serialSetWidgetLayout->addWidget(YOLOdataBitsCBox, 2, 1);
+    serialSetWidgetLayout->addWidget(YOLOcheckBitsCBox, 3, 1);
+    serialSetWidgetLayout->addWidget(YOLOstopBitsCBox, 4, 1);
+    serialSetWidgetLayout->addWidget(YOLOflowCtlCBox, 5, 1);
+
+    serialSetWidgetLayout->addWidget(openSerialYOLOBtn, 0, 2, 3, 1);
+    serialSetWidgetLayout->addWidget(closeSerialYOLOBtn, 3, 2, 3, 1);
+
+    serialYOLODialog->AddContent(serialSetWidget);
+    serialYOLODialog->show();
+
+    pageList.push_back(serialYOLODialog);
+
+    //按下串口设置按钮时，设置串口串口滑入
+    connect(serialYOLOBtn, &textButton::clicked, serialYOLODialog, &SlidePage::slideIn);
+    //按下串口设置按钮时，设置界面中comPortCBox的值
+    connect(serialYOLOBtn, &textButton::clicked, this, [=](){
+        YOLOcomPortCBox->clear();
+        foreach(QSerialPortInfo portInfo, QSerialPortInfo::availablePorts())
+            YOLOcomPortCBox->addItem(portInfo.portName()+":"+portInfo.description());
+        openSerialYOLOBtn->setEnabled(YOLOcomPortCBox->count()>0);
+        serialYOLO->setPortName(YOLOcomPortCBox->currentText());
+    });
+
+    //按下串口设置按钮时，设置串口串口滑入
+    connect(Data_display, &bigIconButton::clicked, serialYOLODialog, &SlidePage::slideIn);
+    //按下串口设置按钮时，设置界面中comPortCBox的值
+    connect(Data_display, &bigIconButton::clicked, this, [=](){
+        YOLOcomPortCBox->clear();
+        foreach(QSerialPortInfo portInfo, QSerialPortInfo::availablePorts())
+            YOLOcomPortCBox->addItem(portInfo.portName()+":"+portInfo.description());
+        openSerialYOLOBtn->setEnabled(YOLOcomPortCBox->count()>0);
+        serialYOLO->setPortName(YOLOcomPortCBox->currentText());
+    });
+
+    //按下打开串口按钮时，打开串口
+    connect(openSerialYOLOBtn, &textButton::clicked, this, &MainWindow::OpenYOLOSerialPort);
+    //按下关闭串口按钮时，关闭串口
+    connect(closeSerialYOLOBtn, &textButton::clicked, this, &MainWindow::CloseYOLOSerialPort);
 }
 
 /* 初始化数据显示窗口 */
@@ -603,6 +737,78 @@ void MainWindow::CloseSerialPort()
         serial->close();
         openSerialBtn->setEnabled(true);
         closeSerialBtn->setEnabled(false);
+        QMessageBox::information(this,"提示信息","串口关闭成功");
+        return;
+    }
+}
+
+/* 打开YOLO串口槽函数 */
+void MainWindow::OpenYOLOSerialPort()
+{
+    if (serialYOLO->isOpen())
+    {
+        QMessageBox::warning(this,"错误","串口已打开");
+        return;
+    }
+
+    //设置串口名称
+    QString textPortName;
+    textPortName = YOLOcomPortCBox->currentText();
+    //根据“：”分割字符串，保留COMx部分
+    QStringList PortName = textPortName.split(":");
+    serialYOLO->setPortName(PortName[0]);
+
+    //设置串口通信参数
+    serialYOLO->setBaudRate(YOLObaudrateCBox->currentText().toInt());//设置波特率
+
+    serialYOLO->setDataBits(QSerialPort::DataBits(YOLOdataBitsCBox->currentText().toInt()));//数据位，默认8位
+
+    //获取校验位控件上面的数据
+    QSerialPort::Parity checkBits  = QSerialPort::NoParity;
+    if(YOLOcheckBitsCBox->currentText() == "NoParity") checkBits = QSerialPort::NoParity;
+    else if(YOLOcheckBitsCBox->currentText() == "OddParity") checkBits = QSerialPort::OddParity;
+    else if(YOLOcheckBitsCBox->currentText() == "EvenParity") checkBits = QSerialPort::EvenParity;
+
+    serialYOLO->setParity(checkBits);
+
+    if (serialYOLO->open(QIODeviceBase::ReadWrite))
+    {
+        YOLOcomPortCBox->setEnabled(false);  //串口设置面板
+        openSerialYOLOBtn->setEnabled(false);
+        closeSerialYOLOBtn->setEnabled(true);
+
+        QMessageBox::information(this,"提示信息","串口已经被成功打开");
+
+        QThread *YSRDthread = new QThread;
+        YSRDwork = new YOLOSerialReadData(serialYOLO);
+        YSRDwork->moveToThread(YSRDthread);
+        YSRDthread->start();
+
+        connect(serialYOLO,&QSerialPort::readyRead,YSRDwork,&YOLOSerialReadData::YSRDworking);  //当串口有数据时，线程工作
+
+        //当线程完成读取时，要求显示在MotionControlWidget的YOLOLog控件中
+        connect(YSRDwork,&YOLOSerialReadData::sigYOLODataDisplay,motionControlWidget,&MotionControlWidget::slotYOLOLogDataDisplay);
+
+        //线程资源释放
+        connect(this,&MainWindow::destroyed,this,[=]()
+        {
+            YSRDthread->quit();
+            YSRDthread->wait();
+            YSRDthread->deleteLater();
+        });
+    }
+    else
+        QMessageBox::warning(this,"错误","打开串口失败");
+}
+
+/* 关闭YOLO串口槽函数 */
+void MainWindow::CloseYOLOSerialPort()
+{
+    if (serialYOLO->isOpen())
+    {
+        serialYOLO->close();
+        openSerialYOLOBtn->setEnabled(true);
+        closeSerialYOLOBtn->setEnabled(false);
         QMessageBox::information(this,"提示信息","串口关闭成功");
         return;
     }

@@ -15,6 +15,7 @@
 #include "motioncontrolwidget.h"
 #include "serialreaddata.h"
 #include "serialdataanalyze.h"
+#include "yoloserialreaddata.h"
 #include "./log/log.h"
 
 QT_BEGIN_NAMESPACE
@@ -74,6 +75,20 @@ private:
     SerialReadData *SRDwork = nullptr;
     SerialDataAnalyze *SDAwork = nullptr;
 
+    //串口YOLO相关
+    QSerialPort *serialYOLO;    //串口对象
+    SlideDialog *serialYOLODialog = nullptr; //串口配置滑入对话框
+    textButton *openSerialYOLOBtn = nullptr;
+    textButton *closeSerialYOLOBtn = nullptr;
+    QComboBox *YOLOcomPortCBox;
+    QComboBox *YOLObaudrateCBox;
+    QComboBox *YOLOdataBitsCBox;
+    QComboBox *YOLOcheckBitsCBox;
+    QComboBox *YOLOstopBitsCBox;
+    QComboBox *YOLOflowCtlCBox;
+
+    YOLOSerialReadData *YSRDwork = nullptr;
+
     //函数声明
     void Init();            //界面初始化
     void InitFrame();       //框架初始化
@@ -81,6 +96,7 @@ private:
     void InitDefaultPage(); //默认主界面初始化
     void InitLayersPage();  //换层页初始化
     void InitSerialPage();  //串口设置界面初始化
+    void InitSerialYOLOPage();  //串口YOLO设置界面初始化
     void InitDataDisplayWidget();   //初始化数据显示窗口
     void InitMotionControlWidget(); //初始化运动控制窗口
     void InitLog();   //log初始化
@@ -117,6 +133,8 @@ private slots:
     void ChangeMotionControlWidget();   //切换到运动控制串口槽函数
     void OpenSerialPort();  //打开串口
     void CloseSerialPort(); //关闭串口
+    void OpenYOLOSerialPort();  //打开串口
+    void CloseYOLOSerialPort(); //关闭串口
 
 public slots:
 
