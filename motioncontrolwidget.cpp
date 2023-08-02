@@ -91,7 +91,7 @@ void MotionControlWidget::InitJoysticks()
         QString length = QString::number(std::floor(JoyData.Length));
 
         str = "x " + x + " y " + y + " angle " + angle + " length " + length;
-        sendstr = "angle " + angle + " " + "length " + length + "\r\n";
+        sendstr = "JSV " + angle + " " + length;
         emit sigJoyAxisSend(sendstr);
         JoystickAxisDataInfo->setText(str);
     });
@@ -102,10 +102,10 @@ void MotionControlWidget::InitJoysticks()
 
         //根据按键状态发送不同的字符串给下位机
         if(JoyData.Status){
-            str = "Button " + QString::number(JoyData.Button) + " press" + "\r\n";
+            str = "JSB " + QString::number(JoyData.Button) + " Press";
         }
         else {
-            str = "Button " + QString::number(JoyData.Button) + " release" + "\r\n";
+            str = "JSB " + QString::number(JoyData.Button) + " Release";
         }
 
         emit sigJoyButtonSend(str);
@@ -190,6 +190,7 @@ void MotionControlWidget::InitPIDWidget()
     PIDComboBox->setMaximumWidth(100);
     PIDComboBox->insertItems(0,QStringList("深度环"));
     PIDComboBox->insertItems(1,QStringList("艏向环"));
+    PIDComboBox->insertItems(2,QStringList("巡线环"));
     PIDComboBox->setFont(QFont("Corbel", 12));
 
     QString sheet = "\
@@ -222,6 +223,10 @@ void MotionControlWidget::InitPIDWidget()
     YawPIDstore.I = 0;
     YawPIDstore.D = 0;
 
+    LinePatrolPIDstore.P = 0;
+    LinePatrolPIDstore.I = 0;
+    LinePatrolPIDstore.D = 0;
+
     connect(PIDComboBox,&QComboBox::currentIndexChanged,this,[=](){
         qDebug() << PIDComboBox->currentIndex() <<PIDComboBox->currentText();
         if(PIDComboBox->currentIndex() == DepthPID)         //深度环
@@ -236,6 +241,13 @@ void MotionControlWidget::InitPIDWidget()
             CurrPID_I->setText(QString("YawPID I:              %1").arg(YawPIDstore.I));
             CurrPID_D->setText(QString("YawPID D:              %1").arg(YawPIDstore.D));
         }
+        else if(PIDComboBox->currentIndex() == LinePatrolPID)     //巡线环
+        {
+            CurrPID_P->setText(QString("LinePatrolPID P:              %1").arg(LinePatrolPIDstore.P));
+            CurrPID_I->setText(QString("LinePatrolPID I:              %1").arg(LinePatrolPIDstore.I));
+            CurrPID_D->setText(QString("LinePatrolPID D:              %1").arg(LinePatrolPIDstore.D));
+        }
+
     });
 
     //设置字体和大小
@@ -312,6 +324,18 @@ void MotionControlWidget::InitPIDWidget()
             YawPIDstore.D = QString(PID_D_TII->value()).toDouble();
 
             emit sigSendPIDSignal(YawPIDstore,YawPID);       //发射设置艏向环PID信号
+        }
+        else if(PIDComboBox->currentIndex() == LinePatrolPID)
+        {
+            CurrPID_P->setText(QString("LinePatrolPID P:              %1").arg(PID_P_TII->value()));
+            CurrPID_I->setText(QString("LinePatrolPID I:              %1").arg(PID_I_TII->value()));
+            CurrPID_D->setText(QString("LinePatrolPID D:              %1").arg(PID_D_TII->value()));
+
+            LinePatrolPIDstore.P = QString(PID_P_TII->value()).toDouble();
+            LinePatrolPIDstore.I = QString(PID_I_TII->value()).toDouble();
+            LinePatrolPIDstore.D = QString(PID_D_TII->value()).toDouble();
+
+            emit sigSendPIDSignal(LinePatrolPIDstore,LinePatrolPID);       //发射设置巡线环PID信号
         }
     });
 

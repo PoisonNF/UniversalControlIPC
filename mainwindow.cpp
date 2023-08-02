@@ -435,7 +435,7 @@ void MainWindow::InitSerialPage()
     connect(motionControlWidget,&MotionControlWidget::sigSendControlSignal,this,[=](QString str)
     {
         qDebug() << "获取控制信号，串口开始发送" << str;
-        serial->write(QString("C " + str + "\r\n").toLocal8Bit().data());
+        serial->write(QString("C " + str).toLocal8Bit().data());
     });
 
     //接收到PID设置信号，往串口中写入PID值
@@ -450,12 +450,17 @@ void MainWindow::InitSerialPage()
             PIDValue = "PID DepthPID "
                      + QString::number(PIDstore.P) + " "
                      + QString::number(PIDstore.I) + " "
-                     + QString::number(PIDstore.D) + "\r\n";
+                     + QString::number(PIDstore.D);
         else if(PIDtype == MotionControlWidget::YawPID)
             PIDValue = "PID YawPID "
                      + QString::number(PIDstore.P) + " "
                      + QString::number(PIDstore.I) + " "
-                     + QString::number(PIDstore.D) + "\r\n";
+                     + QString::number(PIDstore.D);
+        else if(PIDtype == MotionControlWidget::LinePatrolPID)
+            PIDValue = "PID LinePatrolPID "
+                     + QString::number(PIDstore.P) + " "
+                     + QString::number(PIDstore.I) + " "
+                     + QString::number(PIDstore.D);
         qDebug() << PIDValue;
         LOG_INFO((char*)"设置PID值为%s",PIDValue.toStdString().c_str());
         serial->write(PIDValue.toLocal8Bit().data());
