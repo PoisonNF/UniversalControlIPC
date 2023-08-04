@@ -24,29 +24,24 @@ void SerialDataAnalyze::SDAworking(QString serialBuf)
             LOG_INFO((char*)"结果：姿态数据");
         }
     }
-
     //推进器的数据
-    if(m_ProcessedData.at(0) == "T")
+    else if(m_ProcessedData.at(0) == "T")
     {
         LOG_INFO((char*)"结果：推进器数据");
-        if(m_ProcessedData.at(1) == "1")
-        {
-            emit sigThrusterDataAnalyze(m_ProcessedData,1);
-        }
-        else if(m_ProcessedData.at(1) == "2")
-        {
-            emit sigThrusterDataAnalyze(m_ProcessedData,2);
-        }
-        else if(m_ProcessedData.at(1) == "3")
-        {
-            emit sigThrusterDataAnalyze(m_ProcessedData,3);
-        }
-        else if(m_ProcessedData.at(1) == "4")
-        {
-            emit sigThrusterDataAnalyze(m_ProcessedData,4);
-        }
+        emit sigThrusterDataAnalyze(m_ProcessedData);
+
     }
     //深度数据
+    else if(m_ProcessedData.at(0) == "M")
+    {
+        LOG_INFO((char*)"结果：深度数据");
+        emit sigDepthDataAnalyze(m_ProcessedData);
+    }
+    //如果所有的都不是，就是下位机发来的反馈信息
+    else
+    {
+        emit sigOtherDataDisplay(serialBuf);
+    }
 }
 
 

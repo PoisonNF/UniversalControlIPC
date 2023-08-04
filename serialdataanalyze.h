@@ -20,7 +20,9 @@ private:
 signals:
     void sigAngleDataAnalyze(QStringList ProcessedData);
     void sigDepthDataAnalyze(QStringList ProcessedData);
-    void sigThrusterDataAnalyze(QStringList ProcessedData,int ThrusterNum);
+    void sigThrusterDataAnalyze(QStringList ProcessedData);
+
+    void sigOtherDataDisplay(QString serialBuf);
 };
 
 #endif // SERIALDATAANALYZE_H

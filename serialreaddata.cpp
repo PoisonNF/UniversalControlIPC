@@ -17,8 +17,9 @@ void SerialReadData::SRDworking()
     {
         qDebug() << serialBuf;
         LOG_INFO((char *)"串口收到数据%s",QString(serialBuf).toStdString().c_str());
+
         //发射信号给datadisplay窗口
-        emit sigLogDataDisplay(serialBuf);
+        //emit sigLogDataDisplay(serialBuf);        //log显示数据太占资源了，导致显示落后于实际
         //发射信号给数据分拣线程
         emit sigDataSort(serialBuf);
     }

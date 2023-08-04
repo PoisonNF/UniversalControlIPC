@@ -19,6 +19,7 @@
 #include <QMessageBox>
 #include <QComboBox>
 #include <QListView>
+#include <QTextCursor>
 
 #include "./frame/slidepage.h"
 #include "./frame/customWidgets.h"
@@ -83,14 +84,7 @@ private:
     QLabel *CurrPID_D = new QLabel("D:              0",this);   //当前D值显示标签
 
     //control
-    customIcon *WIcon = nullptr;    //按键W图标
-    customIcon *AIcon = nullptr;    //按键A图标
-    customIcon *SIcon = nullptr;    //按键S图标
-    customIcon *DIcon = nullptr;    //按键D图标
-    customIcon *QIcon = nullptr;    //按键Q图标
-    customIcon *EIcon = nullptr;    //按键E图标
-
-    QLabel *ControlData = new QLabel(this);   //当前控制情况标签
+    QLabel *ControlData = new QLabel(this);    //当前控制数据标签
     QLabel *ControlState = new QLabel(this);    //当前控制状态标签
 
     //PropulsionSys
@@ -103,6 +97,13 @@ private:
     QLabel *ServoData2 = new QLabel(this);  //2号舵机的数据
     QLabel *ServoData3 = new QLabel(this);  //3号舵机的数据
     QLabel *ServoData4 = new QLabel(this);  //4号舵机的数据
+
+    //log
+    QTextCursor TextCursor;
+    QPlainTextEdit *logPTE; //串口数据显示框
+
+    //YOLO
+    QLabel *YOLOlogLabel; //YOLO串口数据显示标签
 
     //Info
     QLabel *AttitudeDataInfo = new QLabel(this);    //Info姿态数据
@@ -119,9 +120,6 @@ private:
     QWidget *logWidget = nullptr;
     QWidget *YOLOlogWidget = nullptr;
     QWidget *infoWidget = nullptr;
-
-    QPlainTextEdit *logPTE; //串口数据显示框
-    QPlainTextEdit *YOLOlogPTE; //YOLO串口数据显示框
 
     Qt::Key CurrentKey; //当前按下按键的键值
 
@@ -172,7 +170,7 @@ public slots:
     void slotYOLOLogDataDisplay(QString serialBuf);
     void slotAngleDataDisplay(QStringList ProcessedData);
     void slotDepthDataDisplay(QStringList ProcessedData);
-    void slotThrusterDataDisplay(QStringList ProcessedData,int ThrusterNum);
+    void slotThrusterDataDisplay(QStringList ProcessedData);
 
 private slots:
 };

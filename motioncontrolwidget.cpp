@@ -387,101 +387,44 @@ void MotionControlWidget::InitControlWidget()
     ControlSplitter->setStyleSheet("background-color:#3c3c3c;border-radius:3px;");
 
     /* customIcon构造函数有问题，不能初始化radius和iconHint */
-    /* 六个键盘按键的初始化 */
-    WIcon = new customIcon(":/icons/icons/W.svg", "W", 0, this);
-    WIcon->setMinimumSize(QSize(70,70));
-    AIcon = new customIcon(":/icons/icons/A.svg", "A", 0, this);
-    AIcon->setMinimumSize(QSize(70,70));
-    SIcon = new customIcon(":/icons/icons/S.svg", "S", 0, this);
-    SIcon->setMinimumSize(QSize(70,70));
-    DIcon = new customIcon(":/icons/icons/D.svg", "D", 0, this);
-    DIcon->setMinimumSize(QSize(70,70));
-    QIcon = new customIcon(":/icons/icons/Q.svg", "Q", 0, this);
-    QIcon->setMinimumSize(QSize(70,70));
-    EIcon = new customIcon(":/icons/icons/E.svg", "E", 0, this);
-    EIcon->setMinimumSize(QSize(70,70));
+    textButton *ChangeToAutoBTN = new textButton("AutoMode");
+    textButton *ChangeToHandleBTN = new textButton("HandleMode");
+
+    ChangeToAutoBTN->setMinimumHeight(70);
+    ChangeToHandleBTN->setMinimumHeight(70);
+
+    //默认不启用手动控制按钮
+    ChangeToHandleBTN->setDisabled(true);
 
     //鼠标点击图标也可以发送信号
-    connect(WIcon,&customIcon::clicked,this,[=]()
+    connect(ChangeToAutoBTN,&textButton::clicked,this,[=]()
     {
-        ControlData->setText("Key W Press");
-        ControlState->setText("Forward");
-        emit sigSendControlSignal("W");
+        ChangeToHandleBTN->setEnabled(true);
+        ChangeToAutoBTN->setEnabled(false);
+        ControlState->setText("Now:  AutoMode");
+        emit sigSendControlSignal("MODE AUTO");
     });
-    connect(AIcon,&customIcon::clicked,this,[=]()
+    connect(ChangeToHandleBTN,&textButton::clicked,this,[=]()
     {
-        ControlData->setText("Key A Press");
-        ControlState->setText("Left");
-        emit sigSendControlSignal("A");
-    });
-    connect(SIcon,&customIcon::clicked,this,[=]()
-    {
-        ControlData->setText("Key S Press");
-        ControlState->setText("Draw back");
-        emit sigSendControlSignal("S");
-    });
-    connect(DIcon,&customIcon::clicked,this,[=]()
-    {
-        ControlData->setText("Key D Press");
-        ControlState->setText("Right");
-        emit sigSendControlSignal("D");
-    });
-    connect(QIcon,&customIcon::clicked,this,[=]()
-    {
-        ControlData->setText("Key Q Press");
-        ControlState->setText("Float");
-        emit sigSendControlSignal("Q");
-    });
-    connect(EIcon,&customIcon::clicked,this,[=]()
-    {
-        ControlData->setText("Key E Press");
-        ControlState->setText("Sink");
-        emit sigSendControlSignal("E");
+        ChangeToHandleBTN->setEnabled(false);
+        ChangeToAutoBTN->setEnabled(true);
+        ControlState->setText("Now:  HandleMode");
+        emit sigSendControlSignal("MODE HANDLE");
     });
 
-    //第一排按键水平布局
-    QWidget *Key1Widget = new QWidget(this);
-    Key1Widget->setSizePolicy(sizepolicy);
-    QHBoxLayout *Key1Layout = new QHBoxLayout(this);
-    Key1Widget->setMaximumSize(250,70);
-    Key1Widget->setLayout(Key1Layout);
-    Key1Layout->setContentsMargins(0, 0, 0, 0);
-    Key1Layout->setAlignment(Qt::AlignCenter);
-    Key1Layout->addWidget(QIcon);
-    Key1Layout->addWidget(WIcon);
-    Key1Layout->addWidget(EIcon);
-
-    QWidget *Key2Widget = new QWidget(this);
-    Key2Widget->setSizePolicy(sizepolicy);
-    QHBoxLayout *Key2Layout = new QHBoxLayout(this);
-    Key2Widget->setMaximumSize(250,70);
-    Key2Widget->setLayout(Key2Layout);
-    Key2Layout->setContentsMargins(0, 0, 0, 0);
-    Key2Layout->setAlignment(Qt::AlignCenter);
-    Key2Layout->addWidget(AIcon);
-    Key2Layout->addWidget(SIcon);
-    Key2Layout->addWidget(DIcon);
-
-    //显示按键数据的标签
-    ControlData->setMaximumHeight(25);
-    ControlData->setFont(QFont("Corbel", 15));
+    //按键垂直布局
+    QWidget *BTNWidget = new QWidget(this);
+    QVBoxLayout *BTNLayout = new QVBoxLayout(this); //水平布局
+    BTNWidget->setLayout(BTNLayout);
+    BTNLayout->addWidget(ChangeToAutoBTN);
+    BTNLayout->addWidget(ChangeToHandleBTN);
 
     //显示产生状态的标签
     ControlState->setMaximumHeight(25);
     ControlState->setFont(QFont("Corbel", 15));
 
-    QWidget *ControlDataWidget = new QWidget(this);
-    ControlDataWidget->setSizePolicy(sizepolicy);
-    ControlDataWidget->setMinimumSize(410,0);
-    QVBoxLayout *ControlDataLayout = new QVBoxLayout(this);
-    ControlDataWidget->setLayout(ControlDataLayout);
-    ControlDataLayout->setContentsMargins(0, 0, 0, 0);
-    ControlDataLayout->setAlignment(Qt::AlignCenter);
-    ControlDataLayout->addWidget(Key1Widget);
-    ControlDataLayout->addWidget(Key2Widget);
-    ControlDataLayout->addWidget(ControlData);
-    ControlDataLayout->addWidget(ControlState);
-
+//    ControlDataLayout->addWidget(ControlData);
+//    ControlDataLayout->addWidget(ControlState);
 
     ControlWidget = new QWidget(this);
     ControlWidget->setSizePolicy(sizepolicy);
@@ -491,7 +434,8 @@ void MotionControlWidget::InitControlWidget()
     ControlLayout->setAlignment(Qt::AlignTop);
     ControlLayout->addWidget(ControlTitle);
     ControlLayout->addWidget(ControlSplitter);
-    ControlLayout->addWidget(ControlDataWidget);
+    ControlLayout->addWidget(BTNWidget);
+    ControlLayout->addWidget(ControlState);
 
     splitter_2->addWidget(ControlWidget);
 }
@@ -636,9 +580,12 @@ void MotionControlWidget::InitLogWidget()
     QFont logPTEFont = QFont("Arial",10);
     logPTE = new QPlainTextEdit;
     logPTE->setReadOnly(true);
+    logPTE->setUndoRedoEnabled(false);
     logPTE->setMinimumSize(300,185);
     logPTE->setFont(logPTEFont);
     logPTE->setStyleSheet("background-color: black; color: black;border-radius:3px; background-color: #00000000; border: 1px solid darkgray;");
+
+    TextCursor = logPTE->textCursor();
 
     //串口发送行
     logTII = new textInputItem("Send Line:",this);
@@ -666,8 +613,8 @@ void MotionControlWidget::InitLogWidget()
     connect(ClearBTN,&textButton::clicked,this,[=]()
     {
         logPTE->clear();
-        logTII->setValue("");
-        qDebug() << "Clear complete";
+        //logTII->setValue("");
+        //qDebug() << "Clear complete";
     });
 
     QWidget *BTNWidget = new QWidget(this);
@@ -699,11 +646,10 @@ void MotionControlWidget::InitYOLOLogWidget()
     //log框设置，包含PTE和LE，使用垂直布局
     //用于显示接收串口传过来的数据
     QFont logPTEFont = QFont("Arial",10);
-    YOLOlogPTE = new QPlainTextEdit;
-    YOLOlogPTE->setReadOnly(true);
-    YOLOlogPTE->setMinimumSize(300,185);
-    YOLOlogPTE->setFont(logPTEFont);
-    YOLOlogPTE->setStyleSheet("background-color: black; color: black;border-radius:3px; background-color: #00000000; border: 1px solid darkgray;");
+    YOLOlogLabel = new QLabel;
+    YOLOlogLabel->setMinimumSize(300,100);
+    YOLOlogLabel->setFont(logPTEFont);
+    YOLOlogLabel->setStyleSheet("background-color: black; color: black;border-radius:3px; background-color: #00000000; border: 1px solid darkgray;");
 
     QWidget *YOLOlogWidget = new QWidget(this);
     QVBoxLayout *logLayout = new QVBoxLayout(this); //垂直布局
@@ -712,7 +658,7 @@ void MotionControlWidget::InitYOLOLogWidget()
     logLayout->setAlignment(Qt::AlignTop);
     logLayout->addWidget(logLabel);
     logLayout->addWidget(logSplitter);
-    logLayout->addWidget(YOLOlogPTE);
+    logLayout->addWidget(YOLOlogLabel);
 
     //底下按钮的设置，使用水平布局
     textButton *ClearBTN = new textButton("Clear",this);
@@ -720,8 +666,8 @@ void MotionControlWidget::InitYOLOLogWidget()
     //按下清屏键，清除接收框和发送框所有的数据
     connect(ClearBTN,&textButton::clicked,this,[=]()
     {
-        YOLOlogPTE->clear();
-        qDebug() << "Clear complete";
+        YOLOlogLabel->clear();
+        //qDebug() << "Clear complete";
     });
 
     QWidget *BTNWidget = new QWidget(this);
@@ -760,6 +706,7 @@ void MotionControlWidget::InitInfoWidget()
 
     AttitudeDataInfo->setMinimumHeight(25);
     AttitudeDataInfo->setFont(InfoDataFont);
+    AttitudeDataInfo->setStyleSheet("background-color: black; color: black;border-radius:3px; background-color: #00000000; border: 1px solid darkgray;");
 
     //深度信息标题
     QLabel *DepthInfo = new QLabel(this);
@@ -769,6 +716,7 @@ void MotionControlWidget::InitInfoWidget()
 
     DepthDataInfo->setMinimumHeight(25);
     DepthDataInfo->setFont(InfoDataFont);
+    DepthDataInfo->setStyleSheet("background-color: black; color: black;border-radius:3px; background-color: #00000000; border: 1px solid darkgray;");
 
     //手柄数据输出
     QLabel *JoystickInfo = new QLabel(this);
@@ -778,9 +726,11 @@ void MotionControlWidget::InitInfoWidget()
 
     JoystickAxisDataInfo->setMinimumHeight(25);
     JoystickAxisDataInfo->setFont(InfoDataFont);
+    JoystickAxisDataInfo->setStyleSheet("background-color: black; color: black;border-radius:3px; background-color: #00000000; border: 1px solid darkgray;");
 
     JoystickButtonDataInfo->setMinimumHeight(25);
     JoystickButtonDataInfo->setFont(InfoDataFont);
+    JoystickButtonDataInfo->setStyleSheet("background-color: black; color: black;border-radius:3px; background-color: #00000000; border: 1px solid darkgray;");
 
     infoWidget = new QWidget(this);
     infoWidget->setSizePolicy(sizepolicy);
@@ -853,13 +803,14 @@ void MotionControlWidget::keyPressEvent(QKeyEvent *event)
     }
 }
 
-//数据显示到PlainTextEdit中，发起数据分拣信号
+//数据显示到PlainTextEdit中
 void MotionControlWidget::slotLogDataDisplay(QString serialBuf)
 {
     if(!this->isHidden())
     {
         logPTE->ensureCursorVisible();
-        logPTE->insertPlainText(serialBuf);
+        TextCursor.movePosition(QTextCursor::End);
+        TextCursor.insertText(serialBuf);
     }
     LOG_INFO((char*)"串口数据显示");
 }
@@ -868,8 +819,7 @@ void MotionControlWidget::slotYOLOLogDataDisplay(QString serialBuf)
 {
     if(!this->isHidden())
     {
-        YOLOlogPTE->ensureCursorVisible();
-        YOLOlogPTE->insertPlainText(serialBuf);
+        YOLOlogLabel->setText(serialBuf);
     }
     LOG_INFO((char*)"YOLO串口数据显示");
 }
@@ -879,7 +829,7 @@ void MotionControlWidget::slotAngleDataDisplay(QStringList ProcessedData)
     if(!this->isHidden())
     {
         AttitudeDataInfo->setText(QString("Roll%1    Pitch%2    Yaw%3")
-                                 .arg(ProcessedData.at(2),ProcessedData.at(3),ProcessedData.at(4)));    //Roll Pitch Yaw
+                                 .arg(ProcessedData.at(2),ProcessedData.at(3),ProcessedData.at(4).trimmed()));    //Roll Pitch Yaw
     }
     LOG_INFO((char*)"姿态数据显示");
 }
@@ -888,36 +838,27 @@ void MotionControlWidget::slotDepthDataDisplay(QStringList ProcessedData)
 {
     if(!this->isHidden())
     {
-
+        DepthDataInfo->setText(QString("%1cm")
+                                 .arg(ProcessedData.at(1).trimmed()));    //深度cm
     }
     LOG_INFO((char*)"深度数据显示");
 }
 
-void MotionControlWidget::slotThrusterDataDisplay(QStringList ProcessedData, int ThrusterNum)
+void MotionControlWidget::slotThrusterDataDisplay(QStringList ProcessedData)
 {
     if(!this->isHidden())
     {
-        switch(ThrusterNum)
-        {
-        case 1:
-            ThrusterData1->setText(QString("%1")
-                                   .arg(ProcessedData.at(2)));
-            break;
-        case 2:
-            ThrusterData2->setText(QString("%1")
-                                   .arg(ProcessedData.at(2)));
-            break;
-        case 3:
-            ThrusterData3->setText(QString("%1")
-                                   .arg(ProcessedData.at(2)));
-            break;
-        case 4:
-            ThrusterData4->setText(QString("%1")
-                                   .arg(ProcessedData.at(2)));
-            break;
-        default:
-            break;
-        }
+        ThrusterData1->setText(QString("%1")
+                               .arg(ProcessedData.at(1)));
+
+        ThrusterData2->setText(QString("%1")
+                               .arg(ProcessedData.at(2)));
+
+        ThrusterData3->setText(QString("%1")
+                               .arg(ProcessedData.at(3)));
+
+        ThrusterData4->setText(QString("%1")
+                               .arg(ProcessedData.at(4).trimmed()));
     }
     LOG_INFO((char*)"推进器数据显示");
 }

@@ -14,10 +14,13 @@ Joysticks::Joysticks(QObject *parent)
         if(JoyData.LeftX != 0 || JoyData.LeftY != 0)
         {
             qDebug() << "X" << std::floor(JoyData.LeftX) << "Y" << std::floor(JoyData.LeftY);
-            //根据正切值算角度[0,360]
-            if(JoyData.LeftX > 0 && JoyData.LeftY < 0)  JoyData.Angle = angleFromTangent((-JoyData.LeftY)/JoyData.LeftX);
-            else if(JoyData.LeftX < 0) JoyData.Angle = angleFromTangent((-JoyData.LeftY)/JoyData.LeftX) + 180;
-            else if(JoyData.LeftX > 0 && JoyData.LeftY > 0)JoyData.Angle = angleFromTangent((-JoyData.LeftY)/JoyData.LeftX) + 270;
+            //摇杆前推为0度,右推为+,左推为-
+            if(JoyData.LeftX > 0 && JoyData.LeftY < 0)
+                JoyData.Angle = -(angleFromTangent((-JoyData.LeftY)/JoyData.LeftX) - 90);
+            else if(JoyData.LeftX < 0)
+                JoyData.Angle = -(angleFromTangent((-JoyData.LeftY)/JoyData.LeftX) + 90);
+            else if(JoyData.LeftX > 0 && JoyData.LeftY > 0)
+                JoyData.Angle = angleFromTangent(JoyData.LeftY/JoyData.LeftX) + 90;
             //计算长度
             JoyData.Length = pow((pow(JoyData.LeftX,2)+pow(JoyData.LeftY,2)),0.5);
             if(JoyData.Length > 100) JoyData.Length = 100;

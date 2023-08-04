@@ -208,7 +208,7 @@ void MainWindow::InitDefaultPage()
     //运动控制按钮槽函数连接
     connect(Motion_control, &bigIconButton::clicked, this, [=](){
         //右图标事件槽函数
-        qDebug() << "Motion_controlBtn";
+        //qDebug() << "Motion_controlBtn";
         ChangeMotionControlWidget();
     });
 
@@ -420,29 +420,29 @@ void MainWindow::InitSerialPage()
 //        }
 //    });
 
-    //接收到运动控制发送信号，往串口中写入发送框的数据
+    //接收到运动控制发送数据信号，往串口中写入发送框的数据
     connect(motionControlWidget,&MotionControlWidget::sigLogDataSend,this,[=]()
     {
         if(!motionControlWidget->isHidden())    //如果运动控制界面没有被隐藏
         {
-            qDebug() << "从运动控制界面获取，串口开始发送";
+            qDebug() << "IPC:" << motionControlWidget->logTII->value().toLocal8Bit().data();
             serial->write(motionControlWidget->logTII->value().toLocal8Bit().data());
             //qDebug() << dataDisplayWidget->logTII->value().toLocal8Bit().data();
         }
     });
 
-    //接收到按键或者鼠标点击发送信号，往串口中写入信号携带的数据
+    //接收到切换模式信号，往串口中写入信号携带的数据
     connect(motionControlWidget,&MotionControlWidget::sigSendControlSignal,this,[=](QString str)
     {
-        qDebug() << "获取控制信号，串口开始发送" << str;
-        serial->write(QString("C " + str).toLocal8Bit().data());
+        qDebug() << "IPC:" << str;
+        serial->write(QString(str).toLocal8Bit().data());
     });
 
     //接收到PID设置信号，往串口中写入PID值
     connect(motionControlWidget,&MotionControlWidget::sigSendPIDSignal,
             this,[=](MotionControlWidget::CurrPIDstore PIDstore,MotionControlWidget::PIDtype PIDtype)
     {
-        qDebug() << "设置PID值";
+        //qDebug() << "设置PID值";
         //根据协议传输PID值 形如PID Depth X X X
         QString PIDValue;
 
@@ -461,7 +461,7 @@ void MainWindow::InitSerialPage()
                      + QString::number(PIDstore.P) + " "
                      + QString::number(PIDstore.I) + " "
                      + QString::number(PIDstore.D);
-        qDebug() << PIDValue;
+        qDebug() << "IPC:" + PIDValue;
         LOG_INFO((char*)"设置PID值为%s",PIDValue.toStdString().c_str());
         serial->write(PIDValue.toLocal8Bit().data());
     });
@@ -713,6 +713,7 @@ void MainWindow::OpenSerialPort()
 
         //当线程完成读取时，要求显示在MotionControlWidget的Log控件中
         connect(SRDwork,&SerialReadData::sigLogDataDisplay,motionControlWidget,&MotionControlWidget::slotLogDataDisplay);
+        connect(SDAwork,&SerialDataAnalyze::sigOtherDataDisplay,motionControlWidget,&MotionControlWidget::slotLogDataDisplay);
         //当线程完成分析时，发送给MotionControlWidget显示在对应的控件中
         connect(SDAwork,&SerialDataAnalyze::sigAngleDataAnalyze,motionControlWidget,&MotionControlWidget::slotAngleDataDisplay);
         connect(SDAwork,&SerialDataAnalyze::sigDepthDataAnalyze,motionControlWidget,&MotionControlWidget::slotDepthDataDisplay);
@@ -793,6 +794,11 @@ void MainWindow::OpenYOLOSerialPort()
 
         //当线程完成读取时，要求显示在MotionControlWidget的YOLOLog控件中
         connect(YSRDwork,&YOLOSerialReadData::sigYOLODataDisplay,motionControlWidget,&MotionControlWidget::slotYOLOLogDataDisplay);
+
+        //接收到YOLO读取线程要求发送数据到下位机信号，往串口中写入信号携带的数据
+        connect(YSRDwork,&YOLOSerialReadData::sigYOLODataSend,serial,[=](QString str){
+            serial->write(str.toStdString().c_str());
+        });
 
         //线程资源释放
         connect(this,&MainWindow::destroyed,this,[=]()

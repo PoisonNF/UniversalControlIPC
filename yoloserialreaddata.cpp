@@ -17,7 +17,10 @@ void YOLOSerialReadData::YSRDworking()
         qDebug() << serialBuf;
         LOG_INFO((char *)"YOLO串口收到数据%s",QString(serialBuf).toStdString().c_str());
 
-        //往motioncontrolwidget发送显示信号
+        //YOLO数据显示到YOLOlogLabel标签信号
         emit sigYOLODataDisplay(serialBuf);
+
+        //YOLO数据由串口发送到下位机信号
+        emit sigYOLODataSend(serialBuf);
     }
 }

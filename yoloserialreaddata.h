@@ -19,7 +19,8 @@ public:
 private:
 
 signals:
-    void sigYOLODataDisplay(QString serialBuf);
+    void sigYOLODataDisplay(QString serialBuf); //YOLO数据显示到标签信号
+    void sigYOLODataSend(QString serialBuf);    //YOLO数据由串口发送到下位机信号
 };
 
 
