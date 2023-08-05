@@ -87,11 +87,11 @@ void MotionControlWidget::InitJoysticks()
         QString x = QString::number(std::floor(JoyData.LeftX));
         QString y = QString::number(std::floor(JoyData.LeftY));
 
-        QString angle = QString::number(std::floor(JoyData.Angle));
-        QString length = QString::number(std::floor(JoyData.Length));
+        QString Angle = QString::number(std::floor(JoyData.Angle));
+        QString Pro = QString::number(std::floor(JoyData.Pro));
 
-        str = "x " + x + " y " + y + " angle " + angle + " length " + length;
-        sendstr = "JSV " + angle + " " + length;
+        str = "x " + x + " y " + y + " angle " + Angle + " Pro " + Pro;
+        sendstr = "JSV " + Angle + " " + Pro;
         emit sigJoyAxisSend(sendstr);
         JoystickAxisDataInfo->setText(str);
     });

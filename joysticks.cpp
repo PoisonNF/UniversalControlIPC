@@ -13,7 +13,7 @@ Joysticks::Joysticks(QObject *parent)
     connect(timer, &QTimer::timeout,this,[=](){
         if(JoyData.LeftX != 0 || JoyData.LeftY != 0)
         {
-            qDebug() << "X" << std::floor(JoyData.LeftX) << "Y" << std::floor(JoyData.LeftY);
+            //qDebug() << "X" << std::floor(JoyData.LeftX) << "Y" << std::floor(JoyData.LeftY);
             //摇杆前推为0度,右推为+,左推为-
             if(JoyData.LeftX > 0 && JoyData.LeftY < 0)
                 JoyData.Angle = -(angleFromTangent((-JoyData.LeftY)/JoyData.LeftX) - 90);
@@ -22,9 +22,9 @@ Joysticks::Joysticks(QObject *parent)
             else if(JoyData.LeftX > 0 && JoyData.LeftY > 0)
                 JoyData.Angle = angleFromTangent(JoyData.LeftY/JoyData.LeftX) + 90;
             //计算长度
-            JoyData.Length = pow((pow(JoyData.LeftX,2)+pow(JoyData.LeftY,2)),0.5);
-            if(JoyData.Length > 100) JoyData.Length = 100;
-            qDebug() << "Angle" << std::floor(JoyData.Angle) << "Length" << std::floor(JoyData.Length);
+            JoyData.Pro = pow((pow(JoyData.LeftX,2)+pow(JoyData.LeftY,2)),0.5);
+            if(JoyData.Pro > 100) JoyData.Pro = 100;
+            //qDebug() << "Angle" << std::floor(JoyData.Angle) << "Pro" << std::floor(JoyData.Pro);
             emit sigJoysticksValueGet(JoyData);
         }
     });

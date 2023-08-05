@@ -15,7 +15,7 @@ void YOLOSerialReadData::YSRDworking()
     if(!serialBuf.isEmpty())
     {
         qDebug() << serialBuf;
-        LOG_INFO((char *)"YOLO串口收到数据%s",QString(serialBuf).toStdString().c_str());
+        //LOG_INFO((char *)"YOLO串口收到数据%s",QString(serialBuf).toStdString().c_str());
 
         //YOLO数据显示到YOLOlogLabel标签信号
         emit sigYOLODataDisplay(serialBuf);

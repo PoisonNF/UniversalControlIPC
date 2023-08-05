@@ -21,9 +21,9 @@ public:
         double LeftX;
         double LeftY;
 
-        //换算成角度和长度[0,100]
+        //换算成角度和推进力[0,100]
         double Angle;
-        double Length;
+        double Pro;
 
         //按键编号和状态
         int Button;
