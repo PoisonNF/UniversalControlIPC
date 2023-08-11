@@ -11,16 +11,13 @@ YOLOSerialReadData::YOLOSerialReadData(QSerialPort *serial, QObject *parent)
 
 void YOLOSerialReadData::YSRDworking()
 {
-    serialBuf = QString(m_pserial->readLine());
-    if(!serialBuf.isEmpty())
-    {
-        qDebug() << serialBuf;
-        //LOG_INFO((char *)"YOLO串口收到数据%s",QString(serialBuf).toStdString().c_str());
+    serialBuf = m_pserial->readAll();
 
-        //YOLO数据显示到YOLOlogLabel标签信号
-        emit sigYOLODataDisplay(serialBuf);
+    //qDebug() << serialBuf;
+    //LOG_INFO((char *)"YOLO串口收到数据%s",QString(serialBuf).toStdString().c_str());
 
-        //YOLO数据由串口发送到下位机信号
-        emit sigYOLODataSend(serialBuf);
-    }
+    //YOLO数据显示到YOLOlogLabel标签信号
+    //emit sigYOLODataDisplay(serialBuf);
+    //YOLO数据由串口发送到下位机信号
+    emit sigYOLODataSend(serialBuf);
 }

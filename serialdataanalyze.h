@@ -5,6 +5,10 @@
 #include <QThread>
 #include <QSerialPort>
 #include <QDebug>
+#include <vector>
+#include <iostream>
+#include <sstream>
+#include <string>
 #include "./Log/log.h"
 
 class SerialDataAnalyze : public QObject
@@ -13,16 +17,16 @@ class SerialDataAnalyze : public QObject
 public:
     explicit SerialDataAnalyze(QObject *parent = nullptr);
 
-    void SDAworking(QString serialBuf);
+    void SDAworking(std::string serialBuf);
 private:
-    QStringList m_ProcessedData;    //临时存放数据
+    std::vector<std::string> m_ProcessedData;    //临时存放数据
 
 signals:
-    void sigAngleDataAnalyze(QStringList ProcessedData);
-    void sigDepthDataAnalyze(QStringList ProcessedData);
-    void sigThrusterDataAnalyze(QStringList ProcessedData);
+    void sigAngleDataAnalyze(std::vector<std::string> ProcessedData);
+    void sigDepthDataAnalyze(std::vector<std::string> ProcessedData);
+    void sigThrusterDataAnalyze(std::vector<std::string> ProcessedData);
 
-    void sigOtherDataDisplay(QString serialBuf);
+    void sigOtherDataDisplay(std::string serialBuf);
 };
 
 #endif // SERIALDATAANALYZE_H

@@ -5,6 +5,10 @@
 #include <QThread>
 #include <QSerialPort>
 #include <QDebug>
+#include <vector>
+#include <iostream>
+#include <sstream>
+#include <string>
 #include "./log/log.h"
 
 class SerialReadData : public QObject
@@ -14,13 +18,13 @@ public:
     explicit SerialReadData(QSerialPort *serial = nullptr,QObject *parent = nullptr);
 
     QSerialPort *m_pserial;
-    QString serialBuf;    //储存接收到的数据
+    std::string serialBuf;  //储存接收到的数据
     void SRDworking();    //线程任务函数
 private:
 
 signals:
-    void sigLogDataDisplay(QString serialBuf);
-    void sigDataSort(QString serialBuf);
+    void sigLogDataDisplay(std::string serialBuf);
+    void sigDataSort(std::string serialBuf);
 };
 
 #endif // SERIALREADDATA_H

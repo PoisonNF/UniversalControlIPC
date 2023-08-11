@@ -166,11 +166,11 @@ signals:
     void sigJoyButtonSend(QString str);   //发送手柄按键数据往主窗口
 
 public slots:
-    void slotLogDataDisplay(QString serialBuf);
+    void slotLogDataDisplay(std::string serialBuf);
     void slotYOLOLogDataDisplay(QString serialBuf);
-    void slotAngleDataDisplay(QStringList ProcessedData);
-    void slotDepthDataDisplay(QStringList ProcessedData);
-    void slotThrusterDataDisplay(QStringList ProcessedData);
+    void slotAngleDataDisplay(std::vector<std::string> ProcessedData);
+    void slotDepthDataDisplay(std::vector<std::string> ProcessedData);
+    void slotThrusterDataDisplay(std::vector<std::string> ProcessedData);
 
 private slots:
 };

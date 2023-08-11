@@ -796,8 +796,8 @@ void MainWindow::OpenYOLOSerialPort()
         connect(YSRDwork,&YOLOSerialReadData::sigYOLODataDisplay,motionControlWidget,&MotionControlWidget::slotYOLOLogDataDisplay);
 
         //接收到YOLO读取线程要求发送数据到下位机信号，往串口中写入信号携带的数据
-        connect(YSRDwork,&YOLOSerialReadData::sigYOLODataSend,serial,[=](QString str){
-            serial->write(str.toStdString().c_str());
+        connect(YSRDwork,&YOLOSerialReadData::sigYOLODataSend,serial,[=](QByteArray str){
+            serial->write(str);
         });
 
         //线程资源释放

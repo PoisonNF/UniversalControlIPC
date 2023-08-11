@@ -581,7 +581,7 @@ void MotionControlWidget::InitLogWidget()
     logPTE = new QPlainTextEdit;
     logPTE->setReadOnly(true);
     logPTE->setUndoRedoEnabled(false);
-    logPTE->setMinimumSize(300,185);
+    logPTE->setMinimumSize(300,170);
     logPTE->setFont(logPTEFont);
     logPTE->setStyleSheet("background-color: black; color: black;border-radius:3px; background-color: #00000000; border: 1px solid darkgray;");
 
@@ -804,13 +804,13 @@ void MotionControlWidget::keyPressEvent(QKeyEvent *event)
 }
 
 //数据显示到PlainTextEdit中
-void MotionControlWidget::slotLogDataDisplay(QString serialBuf)
+void MotionControlWidget::slotLogDataDisplay(std::string serialBuf)
 {
     if(!this->isHidden())
     {
         logPTE->ensureCursorVisible();
         TextCursor.movePosition(QTextCursor::End);
-        TextCursor.insertText(serialBuf);
+        TextCursor.insertText(QString::fromStdString(serialBuf));
     }
     LOG_INFO((char*)"串口数据显示");
 }
@@ -824,41 +824,43 @@ void MotionControlWidget::slotYOLOLogDataDisplay(QString serialBuf)
     LOG_INFO((char*)"YOLO串口数据显示");
 }
 
-void MotionControlWidget::slotAngleDataDisplay(QStringList ProcessedData)
+void MotionControlWidget::slotAngleDataDisplay(std::vector<std::string> ProcessedData)
 {
     if(!this->isHidden())
     {
         AttitudeDataInfo->setText(QString("Roll%1    Pitch%2    Yaw%3")
-                                 .arg(ProcessedData.at(2),ProcessedData.at(3),ProcessedData.at(4).trimmed()));    //Roll Pitch Yaw
+                                 .arg(QString::fromStdString(ProcessedData.at(2))
+                                      ,QString::fromStdString(ProcessedData.at(3))
+                                      ,QString::fromStdString(ProcessedData.at(4))));    //Roll Pitch Yaw
     }
     LOG_INFO((char*)"姿态数据显示");
 }
 
-void MotionControlWidget::slotDepthDataDisplay(QStringList ProcessedData)
+void MotionControlWidget::slotDepthDataDisplay(std::vector<std::string> ProcessedData)
 {
     if(!this->isHidden())
     {
         DepthDataInfo->setText(QString("%1cm")
-                                 .arg(ProcessedData.at(1).trimmed()));    //深度cm
+                                 .arg(QString::fromStdString(ProcessedData.at(1))));    //深度cm
     }
     LOG_INFO((char*)"深度数据显示");
 }
 
-void MotionControlWidget::slotThrusterDataDisplay(QStringList ProcessedData)
+void MotionControlWidget::slotThrusterDataDisplay(std::vector<std::string> ProcessedData)
 {
     if(!this->isHidden())
     {
         ThrusterData1->setText(QString("%1")
-                               .arg(ProcessedData.at(1)));
+                               .arg(QString::fromStdString(ProcessedData.at(1))));
 
         ThrusterData2->setText(QString("%1")
-                               .arg(ProcessedData.at(2)));
+                               .arg(QString::fromStdString(ProcessedData.at(2))));
 
         ThrusterData3->setText(QString("%1")
-                               .arg(ProcessedData.at(3)));
+                               .arg(QString::fromStdString(ProcessedData.at(3))));
 
         ThrusterData4->setText(QString("%1")
-                               .arg(ProcessedData.at(4).trimmed()));
+                               .arg(QString::fromStdString(ProcessedData.at(4))));
     }
     LOG_INFO((char*)"推进器数据显示");
 }
