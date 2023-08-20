@@ -71,12 +71,16 @@ public:
     {
         DepthPID,
         YawPID,
+        AngleLoopPID,
+        PositionLoopPID,
         LinePatrolPID
     }PIDtype;
 
 private:
     CurrPIDstore DepthPIDstore; //储存深度环PID
     CurrPIDstore YawPIDstore;   //储存艏向环PID
+    CurrPIDstore AngleLoopPIDstore;   //储存角度环PID
+    CurrPIDstore PositionLoopPIDstore;   //储存位置环PID
     CurrPIDstore LinePatrolPIDstore; //储存巡线环PID
 
     QLabel *CurrPID_P = new QLabel("P:              0",this);   //当前P值显示标签

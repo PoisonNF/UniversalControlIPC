@@ -190,7 +190,9 @@ void MotionControlWidget::InitPIDWidget()
     PIDComboBox->setMaximumWidth(100);
     PIDComboBox->insertItems(0,QStringList("深度环"));
     PIDComboBox->insertItems(1,QStringList("艏向环"));
-    PIDComboBox->insertItems(2,QStringList("巡线环"));
+    //PIDComboBox->insertItems(2,QStringList("巡线环"));
+    PIDComboBox->insertItems(2,QStringList("角度环"));
+    PIDComboBox->insertItems(3,QStringList("位置环"));
     PIDComboBox->setFont(QFont("Corbel", 12));
 
     QString sheet = "\
@@ -223,6 +225,14 @@ void MotionControlWidget::InitPIDWidget()
     YawPIDstore.I = 0;
     YawPIDstore.D = 0;
 
+    AngleLoopPIDstore.P = 0;
+    AngleLoopPIDstore.I = 0;
+    AngleLoopPIDstore.D = 0;
+
+    PositionLoopPIDstore.P = 0;
+    PositionLoopPIDstore.I = 0;
+    PositionLoopPIDstore.D = 0;
+
     LinePatrolPIDstore.P = 0;
     LinePatrolPIDstore.I = 0;
     LinePatrolPIDstore.D = 0;
@@ -241,11 +251,17 @@ void MotionControlWidget::InitPIDWidget()
             CurrPID_I->setText(QString("YawPID I:              %1").arg(YawPIDstore.I));
             CurrPID_D->setText(QString("YawPID D:              %1").arg(YawPIDstore.D));
         }
-        else if(PIDComboBox->currentIndex() == LinePatrolPID)     //巡线环
+        else if(PIDComboBox->currentIndex() == AngleLoopPID)     //角度环
         {
-            CurrPID_P->setText(QString("LinePatrolPID P:              %1").arg(LinePatrolPIDstore.P));
-            CurrPID_I->setText(QString("LinePatrolPID I:              %1").arg(LinePatrolPIDstore.I));
-            CurrPID_D->setText(QString("LinePatrolPID D:              %1").arg(LinePatrolPIDstore.D));
+            CurrPID_P->setText(QString("AngleLoopPID P:              %1").arg(AngleLoopPIDstore.P));
+            CurrPID_I->setText(QString("AngleLoopPID I:              %1").arg(AngleLoopPIDstore.I));
+            CurrPID_D->setText(QString("AngleLoopPID D:              %1").arg(AngleLoopPIDstore.D));
+        }
+        else if(PIDComboBox->currentIndex() == PositionLoopPID)     //位置环
+        {
+            CurrPID_P->setText(QString("PositionLoopPID P:              %1").arg(PositionLoopPIDstore.P));
+            CurrPID_I->setText(QString("PositionLoopPID I:              %1").arg(PositionLoopPIDstore.I));
+            CurrPID_D->setText(QString("PositionLoopPID D:              %1").arg(PositionLoopPIDstore.D));
         }
 
     });
@@ -325,17 +341,29 @@ void MotionControlWidget::InitPIDWidget()
 
             emit sigSendPIDSignal(YawPIDstore,YawPID);       //发射设置艏向环PID信号
         }
-        else if(PIDComboBox->currentIndex() == LinePatrolPID)
+        else if(PIDComboBox->currentIndex() == AngleLoopPID)
         {
-            CurrPID_P->setText(QString("LinePatrolPID P:              %1").arg(PID_P_TII->value()));
-            CurrPID_I->setText(QString("LinePatrolPID I:              %1").arg(PID_I_TII->value()));
-            CurrPID_D->setText(QString("LinePatrolPID D:              %1").arg(PID_D_TII->value()));
+            CurrPID_P->setText(QString("AngleLoopPID P:              %1").arg(PID_P_TII->value()));
+            CurrPID_I->setText(QString("AngleLoopPID I:              %1").arg(PID_I_TII->value()));
+            CurrPID_D->setText(QString("AngleLoopPID D:              %1").arg(PID_D_TII->value()));
 
-            LinePatrolPIDstore.P = QString(PID_P_TII->value()).toDouble();
-            LinePatrolPIDstore.I = QString(PID_I_TII->value()).toDouble();
-            LinePatrolPIDstore.D = QString(PID_D_TII->value()).toDouble();
+            AngleLoopPIDstore.P = QString(PID_P_TII->value()).toDouble();
+            AngleLoopPIDstore.I = QString(PID_I_TII->value()).toDouble();
+            AngleLoopPIDstore.D = QString(PID_D_TII->value()).toDouble();
 
-            emit sigSendPIDSignal(LinePatrolPIDstore,LinePatrolPID);       //发射设置巡线环PID信号
+            emit sigSendPIDSignal(AngleLoopPIDstore,AngleLoopPID);       //发射设置角度环PID信号
+        }
+        else if(PIDComboBox->currentIndex() == PositionLoopPID)
+        {
+            CurrPID_P->setText(QString("PositionLoopPID P:              %1").arg(PID_P_TII->value()));
+            CurrPID_I->setText(QString("PositionLoopPID I:              %1").arg(PID_I_TII->value()));
+            CurrPID_D->setText(QString("PositionLoopPID D:              %1").arg(PID_D_TII->value()));
+
+            PositionLoopPIDstore.P = QString(PID_P_TII->value()).toDouble();
+            PositionLoopPIDstore.I = QString(PID_I_TII->value()).toDouble();
+            PositionLoopPIDstore.D = QString(PID_D_TII->value()).toDouble();
+
+            emit sigSendPIDSignal(PositionLoopPIDstore,PositionLoopPID);       //发射设置位置环PID信号
         }
     });
 

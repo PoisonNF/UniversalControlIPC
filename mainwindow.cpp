@@ -456,8 +456,13 @@ void MainWindow::InitSerialPage()
                      + QString::number(PIDstore.P) + " "
                      + QString::number(PIDstore.I) + " "
                      + QString::number(PIDstore.D);
-        else if(PIDtype == MotionControlWidget::LinePatrolPID)
-            PIDValue = "PID LinePatrolPID "
+        else if(PIDtype == MotionControlWidget::AngleLoopPID)
+            PIDValue = "PID AngleLoopPID "
+                     + QString::number(PIDstore.P) + " "
+                     + QString::number(PIDstore.I) + " "
+                     + QString::number(PIDstore.D);
+        else if(PIDtype == MotionControlWidget::PositionLoopPID)
+            PIDValue = "PID PositionLoopPID "
                      + QString::number(PIDstore.P) + " "
                      + QString::number(PIDstore.I) + " "
                      + QString::number(PIDstore.D);
